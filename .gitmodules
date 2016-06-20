@@ -1,0 +1,3 @@
+[submodule "dep/AEScript"]
+	path = dep/AEScript
+	url = https://github.com/Evairfairy/AEScript

@@ -16,6 +16,7 @@ endif()
 
 # add our dependecies
 
+add_subdirectory(AEScript)
 add_subdirectory(vmaplib)
 add_subdirectory(recastnavigation)
 add_subdirectory(g3dlite)
