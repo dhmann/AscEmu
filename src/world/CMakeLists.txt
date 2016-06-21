@@ -4,6 +4,8 @@
 project(world CXX)
 
 set(sources
+    Scripting/Bindings/AEArea.cpp
+
    Commands/AccountCommands.cpp
    Commands/ArenaCommands.cpp
    Commands/CharacterCommands.cpp
@@ -175,6 +177,8 @@ if(WIN32)
 endif()
 
 set(headers
+    Scripting/Bindings/AEArea.h
+    
 	AchievementMgr.h
 	AddonMgr.h
 	AIInterface.h
@@ -329,6 +333,7 @@ include_directories(
    ${CMAKE_SOURCE_DIR}/src/shared
    ${CMAKE_CURRENT_SOURCE_DIR}
    ${ZLIB_INCLUDE_DIRS}
+   ${AESCRIPT_INCLUDE_DIRS}
 )
 
 add_executable(${PROJECT_NAME} ${sources} ${headers})
