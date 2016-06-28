@@ -34,7 +34,7 @@
 
 class Channel;
 class Guild;
-struct Quest;
+struct QuestProperties;
 
 enum ServerHookEvents
 {
@@ -97,13 +97,13 @@ typedef bool(*tOnCastSpell)(Player* pPlayer, SpellEntry* pSpell, Spell* spell);
 typedef void(*tOnTick)();
 typedef bool(*tOnLogoutRequest)(Player* pPlayer);
 typedef void(*tOnLogout)(Player* pPlayer);
-typedef void(*tOnQuestAccept)(Player* pPlayer, Quest const* pQuest, Object* pQuestGiver);
+typedef void(*tOnQuestAccept)(Player* pPlayer, QuestProperties const* pQuest, Object* pQuestGiver);
 typedef void(*tOnZone)(Player* pPlayer, uint32 Zone, uint32 oldzone);
 typedef bool(*tOnChat)(Player* pPlayer, uint32 Type, uint32 Lang, const char* Message, const char* Misc);
 typedef void(*tOnLoot)(Player* pPlayer, Unit* pTarget, uint32 Money, uint32 ItemId);
 typedef bool(*ItemScript)(Item* pItem, Player* pPlayer);
-typedef void(*tOnQuestCancel)(Player* pPlayer, Quest const* pQuest);
-typedef void(*tOnQuestFinished)(Player* pPlayer, Quest const* pQuest, Object* pQuestGiver);
+typedef void(*tOnQuestCancel)(Player* pPlayer, QuestProperties const* pQuest);
+typedef void(*tOnQuestFinished)(Player* pPlayer, QuestProperties const* pQuest, Object* pQuestGiver);
 typedef void(*tOnHonorableKill)(Player* pPlayer, Player* pKilled);
 typedef void(*tOnArenaFinish)(Player* pPlayer, ArenaTeam* pTeam, bool victory, bool rated);
 typedef void(*tOnObjectLoot)(Player* pPlayer, Object* pTarget, uint32 Money, uint32 ItemId);
@@ -124,7 +124,7 @@ class GossipScript;
 class GameObjectAIScript;
 class InstanceScript;
 class ScriptMgr;
-struct ItemPrototype;
+struct ItemProperties;
 class QuestLogEntry;
 
 // Factory Imports (from script lib)
@@ -336,7 +336,7 @@ class SERVER_DECL CreatureAIScript
         virtual void OnLoad() {}
         virtual void OnDespawn() {}
         virtual void OnReachWP(uint32 /*iWaypointId*/, bool /*bForwards*/) {}
-        virtual void OnLootTaken(Player* /*pPlayer*/, ItemPrototype const* /*pItemPrototype*/) {}
+        virtual void OnLootTaken(Player* /*pPlayer*/, ItemProperties const* /*pItemPrototype*/) {}
         virtual void AIUpdate() {}
         virtual void OnEmote(Player* /*pPlayer*/, EmoteType /*Emote*/) {}
         virtual void StringFunctionCall(int) {}
@@ -453,7 +453,7 @@ class SERVER_DECL GameObjectAIScript
         virtual void OnCreate() {}
         virtual void OnSpawn() {}
         virtual void OnDespawn() {}
-        virtual void OnLootTaken(Player* /*pLooter*/, ItemPrototype const* /*pItemInfo*/) {}
+        virtual void OnLootTaken(Player* /*pLooter*/, ItemProperties const* /*pItemInfo*/) {}
         virtual void OnActivate(Player* /*pPlayer*/) {}
         virtual void OnDamaged(uint32 /*damage*/){}
         virtual void OnDestroyed(){}
@@ -573,14 +573,14 @@ class SERVER_DECL HookInterface : public Singleton<HookInterface>
         bool OnCastSpell(Player* pPlayer, SpellEntry* pSpell, Spell* spell);
         bool OnLogoutRequest(Player* pPlayer);
         void OnLogout(Player* pPlayer);
-        void OnQuestAccept(Player* pPlayer, Quest const* pQuest, Object* pQuestGiver);
+        void OnQuestAccept(Player* pPlayer, QuestProperties const* pQuest, Object* pQuestGiver);
         void OnZone(Player* pPlayer, uint32 Zone, uint32 oldZone);
         bool OnChat(Player* pPlayer, uint32 Type, uint32 Lang, const char* Message, const char* Misc);
         void OnLoot(Player* pPlayer, Unit* pTarget, uint32 Money, uint32 ItemId);
         void OnFullLogin(Player* pPlayer);
         void OnCharacterCreate(Player* pPlayer);
-        void OnQuestCancelled(Player* pPlayer, Quest const* pQuest);
-        void OnQuestFinished(Player* pPlayer, Quest const* pQuest, Object* pQuestGiver);
+        void OnQuestCancelled(Player* pPlayer, QuestProperties const* pQuest);
+        void OnQuestFinished(Player* pPlayer, QuestProperties const* pQuest, Object* pQuestGiver);
         void OnHonorableKill(Player* pPlayer, Player* pKilled);
         void OnArenaFinish(Player* pPlayer, ArenaTeam* pTeam, bool victory, bool rated);
         void OnObjectLoot(Player* pPlayer, Object* pTarget, uint32 Money, uint32 ItemId);

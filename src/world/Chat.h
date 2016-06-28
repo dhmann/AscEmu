@@ -234,7 +234,7 @@ class SERVER_DECL ChatHandler : public Singleton<ChatHandler>
         bool ExecuteCommandInTable(ChatCommand* table, const char* text, WorldSession* m_session);
         bool ShowHelpForCommand(WorldSession* m_session, ChatCommand* table, const char* cmd);
         void SendHighlightedName(WorldSession* m_session, const char* prefix, const char* full_name, std::string & lowercase_name, std::string & highlight, uint32 id);
-        void SendItemLinkToPlayer(ItemPrototype const* iProto, WorldSession* pSession, bool ItemCount, Player* owner, uint32 language = LANG_UNIVERSAL);
+        void SendItemLinkToPlayer(ItemProperties const* iProto, WorldSession* pSession, bool ItemCount, Player* owner, uint32 language = LANG_UNIVERSAL);
 
         ChatCommand* getCommandTable();
 
@@ -417,6 +417,7 @@ class SERVER_DECL ChatHandler : public Singleton<ChatHandler>
         bool HandleServerShutdownCommand(const char* args, WorldSession* m_session);
         bool HandleServerCancelShutdownCommand(const char* /*args*/, WorldSession* m_session);
         bool HandleServerRestartCommand(const char* args, WorldSession* m_session);
+        bool HandleServerReloadScriptsCommand(const char* /*args*/, WorldSession* m_session);
 
         //Server reload commands
         bool HandleReloadGameobjectsCommand(const char* /*args*/, WorldSession* m_session);

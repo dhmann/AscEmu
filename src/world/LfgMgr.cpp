@@ -108,13 +108,13 @@ void LfgMgr::LoadRewards()
             maxLevel = 80;
         }
 
-        if (firstQuestId && !sMySQLStore.GetQuest(firstQuestId))
+        if (firstQuestId && !sMySQLStore.GetQuestProperties(firstQuestId))
         {
             Log.Debug("LFGMgr", "First quest %u specified for dungeon %u in table `lfg_dungeon_rewards` does not exist!", firstQuestId, dungeonId);
             firstQuestId = 0;
         }
 
-        if (otherQuestId && !sMySQLStore.GetQuest(otherQuestId))
+        if (otherQuestId && !sMySQLStore.GetQuestProperties(otherQuestId))
         {
             Log.Debug("LFGMgr", "Other quest %u specified for dungeon %u in table `lfg_dungeon_rewards` does not exist!", otherQuestId, dungeonId);
             otherQuestId = 0;
@@ -668,7 +668,7 @@ LfgProposal* LfgMgr::FindNewGroups(LfgGuidList& check, LfgGuidList& all)
     Log.Debug("LFGMgr", "FindNewGroup: (%s) - all(%s)", ConcatenateGuids(check).c_str(), ConcatenateGuids(all).c_str());
 
     LfgProposal* pProposal = NULL;
-    if (!check.size() || check.size() > 5 || !CheckCompatibility(check, pProposal))
+    if (check.empty() || check.size() > 5 || !CheckCompatibility(check, pProposal))
         return NULL;
 
     // Try to match with queued groups
@@ -1074,11 +1074,11 @@ LfgAnswer LfgMgr::GetCompatibles(std::string key)
 void LfgMgr::GetCompatibleDungeons(LfgDungeonSet& dungeons, const PlayerSet& players, LfgLockPartyMap& lockMap)
 {
     lockMap.clear();
-    for (PlayerSet::const_iterator it = players.begin(); it != players.end() && dungeons.size(); ++it)
+    for (PlayerSet::const_iterator it = players.begin(); it != players.end() && !dungeons.empty(); ++it)
     {
         uint64 guid = (*it)->GetGUID();
         LfgLockMap cachedLockMap = GetLockedDungeons(guid);
-        for (LfgLockMap::const_iterator it2 = cachedLockMap.begin(); it2 != cachedLockMap.end() && dungeons.size(); ++it2)
+        for (LfgLockMap::const_iterator it2 = cachedLockMap.begin(); it2 != cachedLockMap.end() && !dungeons.empty(); ++it2)
         {
             uint32 dungeonId = (it2->first & 0x00FFFFFF); // Compare dungeon ids
             LfgDungeonSet::iterator itDungeon = dungeons.find(dungeonId);
@@ -1688,7 +1688,7 @@ void LfgMgr::RewardDungeonDoneFor(const uint32 dungeonId, Player* player)
         return;
 
     uint8 index = 0;
-    Quest const* qReward = sMySQLStore.GetQuest(reward->reward[index].questId);
+    QuestProperties const* qReward = sMySQLStore.GetQuestProperties(reward->reward[index].questId);
     if (!qReward)
         return;
 
@@ -1722,7 +1722,7 @@ void LfgMgr::RewardDungeonDoneFor(const uint32 dungeonId, Player* player)
         {
             if (qReward->reward_item[i])
             {
-                ItemPrototype const* proto = sMySQLStore.GetItemProto(qReward->reward_item[i]);
+                ItemProperties const* proto = sMySQLStore.GetItemProperties(qReward->reward_item[i]);
                 if (!proto)
                 {
                     Log.Error("LfgMgr", "Invalid item prototype in quest reward! ID %d, quest %d", qReward->reward_item[i], qReward->id);
@@ -1782,7 +1782,7 @@ void LfgMgr::RewardDungeonDoneFor(const uint32 dungeonId, Player* player)
     else
     {
         index = 1;
-        qReward = sMySQLStore.GetQuest(reward->reward[index].questId);
+        qReward = sMySQLStore.GetQuestProperties(reward->reward[index].questId);
         if (!qReward)
             return;
 
@@ -1813,7 +1813,7 @@ void LfgMgr::RewardDungeonDoneFor(const uint32 dungeonId, Player* player)
         {
             if (qReward->reward_item[i])
             {
-                ItemPrototype const* proto = sMySQLStore.GetItemProto(qReward->reward_item[i]);
+                ItemProperties const* proto = sMySQLStore.GetItemProperties(qReward->reward_item[i]);
                 if (!proto)
                 {
                     Log.Error("LfgMgr", "Invalid item prototype in quest reward! ID %d, quest %d", qReward->reward_item[i], qReward->id);

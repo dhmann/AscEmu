@@ -135,7 +135,7 @@ void WorldSession::HandleAutostoreLootItemOpcode(WorldPacket& recv_data)
     }
 
     itemid = pLoot->items.at(lootSlot).item.itemproto->ItemId;
-    ItemPrototype const* it = pLoot->items.at(lootSlot).item.itemproto;
+    ItemProperties const* it = pLoot->items.at(lootSlot).item.itemproto;
 
     if ((error = _player->GetItemInterface()->CanReceiveItem(it, 1)) != 0)
     {
@@ -476,7 +476,7 @@ void WorldSession::HandleLootReleaseOpcode(WorldPacket& recv_data)
             for (std::vector<__LootItem>::iterator i = pCreature->loot.items.begin(); i != pCreature->loot.items.end(); ++i)
                 if (i->iItemsCount > 0)
                 {
-                    ItemPrototype const* proto = i->item.itemproto;
+                    ItemProperties const* proto = i->item.itemproto;
                     if (proto->Class != 12)
                         return;
                     if (_player->HasQuestForItem(i->item.itemproto->ItemId))
@@ -519,10 +519,10 @@ void WorldSession::HandleLootReleaseOpcode(WorldPacket& recv_data)
                 //check for locktypes
 
                 bool despawn = false;
-                if (pGO->GetInfo()->chest.consumable == 1)
+                if (pGO->GetGameObjectProperties()->chest.consumable == 1)
                     despawn = true;
 
-                auto pLock = sLockStore.LookupEntry(pGO->GetInfo()->chest.lock_id);
+                auto pLock = sLockStore.LookupEntry(pGO->GetGameObjectProperties()->chest.lock_id);
                 if (pLock != nullptr)
                 {
                     for (uint32 i = 0; i < LOCK_NUM_CASES; i++)
@@ -1399,7 +1399,7 @@ void WorldSession::HandleAmmoSetOpcode(WorldPacket& recv_data)
     if (!ammoId)
         return;
 
-    ItemPrototype const* xproto = sMySQLStore.GetItemProto(ammoId);
+    ItemProperties const* xproto = sMySQLStore.GetItemProperties(ammoId);
     if (!xproto)
         return;
 
@@ -1566,14 +1566,14 @@ void WorldSession::HandleGameObjectUse(WorldPacket& recv_data)
     GameObject* obj = _player->GetMapMgr()->GetGameObject((uint32)guid);
     if (!obj)
         return;
-    auto gameobject_info = obj->GetInfo();
+    auto gameobject_info = obj->GetGameObjectProperties();
     if (!gameobject_info)
         return;
 
     Player* plyr = GetPlayer();
 
     //Event Scripts
-    objmgr.CheckforScripts(plyr, obj->GetInfo()->raw.parameter_9);
+    objmgr.CheckforScripts(plyr, obj->GetGameObjectProperties()->raw.parameter_9);
 
     CALL_GO_SCRIPT_EVENT(obj, OnActivate)(_player);
     CALL_INSTANCE_SCRIPT_EVENT(_player->GetMapMgr(), OnGameObjectActivate)(obj, _player);
@@ -1654,16 +1654,16 @@ void WorldSession::HandleGameObjectUse(WorldPacket& recv_data)
                 {
                     school = static_cast<GameObject_FishingHole*>(go);
 
-                    if (!fn->isInRange(school, static_cast<float>(school->GetInfo()->fishinghole.radius)))
+                    if (!fn->isInRange(school, static_cast<float>(school->GetGameObjectProperties()->fishinghole.radius)))
                         school = nullptr;
                 }
 
                 if (school != nullptr)
                 {
                     if (school->GetMapMgr() != NULL)
-                        lootmgr.FillGOLoot(&school->loot, school->GetInfo()->raw.parameter_1, school->GetMapMgr()->iInstanceMode);
+                        lootmgr.FillGOLoot(&school->loot, school->GetGameObjectProperties()->raw.parameter_1, school->GetMapMgr()->iInstanceMode);
                     else
-                        lootmgr.FillGOLoot(&school->loot, school->GetInfo()->raw.parameter_1, 0);
+                        lootmgr.FillGOLoot(&school->loot, school->GetGameObjectProperties()->raw.parameter_1, 0);
 
                     plyr->SendLoot(school->GetGUID(), LOOT_FISHING, school->GetMapId());
                     fn->EndFishing(false);
@@ -1739,7 +1739,7 @@ void WorldSession::HandleGameObjectUse(WorldPacket& recv_data)
         break;
         case GAMEOBJECT_TYPE_SPELLCASTER:
         {
-            if (obj->GetInfo()->spell_caster.party_only != 0)
+            if (obj->GetGameObjectProperties()->spell_caster.party_only != 0)
             {
                 if (obj->m_summoner != NULL && obj->m_summoner->IsPlayer())
                 {
@@ -2376,7 +2376,7 @@ void WorldSession::HandleLootMasterGiveOpcode(WorldPacket& recv_data)
     }
 
     itemid = pLoot->items.at(slotid).item.itemproto->ItemId;
-    ItemPrototype const* it = pLoot->items.at(slotid).item.itemproto;
+    ItemProperties const* it = pLoot->items.at(slotid).item.itemproto;
 
     if ((error = player->GetItemInterface()->CanReceiveItem(it, 1)) != 0)
     {
@@ -2516,14 +2516,14 @@ void WorldSession::HandleOpenItemOpcode(WorldPacket& recv_data)
     // gift wrapping handler
     if (pItem->GetGiftCreatorGUID() && pItem->wrapped_item_id)
     {
-        ItemPrototype const* it = sMySQLStore.GetItemProto(pItem->wrapped_item_id);
-        if (it == NULL)
+        ItemProperties const* it = sMySQLStore.GetItemProperties(pItem->wrapped_item_id);
+        if (it == nullptr)
             return;
 
         pItem->SetGiftCreatorGUID(0);
         pItem->SetEntry(pItem->wrapped_item_id);
         pItem->wrapped_item_id = 0;
-        pItem->SetProto(it);
+        pItem->SetItemProperties(it);
 
         if (it->Bonding == ITEM_BIND_ON_PICKUP)
             pItem->SoulBind();
@@ -2541,13 +2541,13 @@ void WorldSession::HandleOpenItemOpcode(WorldPacket& recv_data)
         return;
     }
 
-    auto lock = sLockStore.LookupEntry(pItem->GetProto()->LockId);
+    auto lock = sLockStore.LookupEntry(pItem->GetItemProperties()->LockId);
 
     uint32 removeLockItems[LOCK_NUM_CASES] = { 0, 0, 0, 0, 0, 0, 0, 0 };
 
     if (lock) // locked item
     {
-        for (uint8 i = 0; i < LOCK_NUM_CASES; i++)
+        for (uint8 i = 0; i < LOCK_NUM_CASES; ++i)
         {
             if (lock->locktype[i] == 1 && lock->lockmisc[i] > 0)
             {
@@ -2568,7 +2568,7 @@ void WorldSession::HandleOpenItemOpcode(WorldPacket& recv_data)
                 return;
             }
         }
-        for (uint8 i = 0; i < LOCK_NUM_CASES; i++)
+        for (uint8 i = 0; i < LOCK_NUM_CASES; ++i)
             if (removeLockItems[i])
                 _player->GetItemInterface()->RemoveItemAmt(removeLockItems[i], 1);
     }

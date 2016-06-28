@@ -438,11 +438,12 @@ bool ChatHandler::HandleIncreaseWeaponSkill(const char* args, WorldSession* m_se
     if (!pr) pr = m_session->GetPlayer();
     if (!pr) return false;
     Item* it = pr->GetItemInterface()->GetInventoryItem(EQUIPMENT_SLOT_MAINHAND);
-    ItemPrototype const* proto = NULL;
+
+    ItemProperties const* proto = nullptr;
     if (!it)
         it = pr->GetItemInterface()->GetInventoryItem(EQUIPMENT_SLOT_RANGED);
     if (it)
-        proto = it->GetProto();
+        proto = it->GetItemProperties();
     if (proto)
     {
         switch (proto->SubClass)
@@ -573,10 +574,8 @@ bool ChatHandler::HandleCreatePetCommand(const char* args, WorldSession* m_sessi
     if (entry == 0)
         return false;
 
-    CreatureInfo const* ci = sMySQLStore.GetCreatureInfo(entry);
-    CreatureProto const* cp = sMySQLStore.GetCreatureProto(entry);
-
-    if ((ci == NULL) || (cp == NULL))
+    CreatureProperties const* cp = sMySQLStore.GetCreatureProperties(entry);
+    if (cp == nullptr)
         return false;
 
     Player* p = m_session->GetPlayer();
@@ -592,7 +591,7 @@ bool ChatHandler::HandleCreatePetCommand(const char* args, WorldSession* m_sessi
 
     Pet* pet = objmgr.CreatePet(entry);
 
-    if (!pet->CreateAsSummon(entry, ci, NULL, p, NULL, 1, 0, &v, true))
+    if (!pet->CreateAsSummon(entry, cp, NULL, p, NULL, 1, 0, &v, true))
     {
         pet->DeleteMe();
         return true;
@@ -602,103 +601,6 @@ bool ChatHandler::HandleCreatePetCommand(const char* args, WorldSession* m_sessi
 
     return true;
 }
-
-
-#ifdef USE_SPECIFIC_AIAGENTS
-//this is custom stuff !
-bool ChatHandler::HandlePetSpawnAIBot(const char* args, WorldSession* m_session)
-{
-    if (!*args)
-        return false;
-
-    if (!m_session->GetPlayer())
-        return false; //wtf ?
-
-    uint32 botprice = m_session->GetPlayer()->getLevel() * 10000; //1 gold per level ?
-
-    if (!m_session->GetPlayer()->HasGold(botprice))
-    {
-        GreenSystemMessage(m_session, "You need a total of %u coins to afford a bot", botprice);
-        return false;
-    }
-
-    uint8 botType = (uint8)atof((char*)args);
-
-    if (botType != 0)
-    {
-        RedSystemMessage(m_session, "Incorrect value. Accepting value 0 only = healbot :)");
-        return true;
-    }
-
-    uint32 Entry;
-    char name[50];
-    uint8 race = m_session->GetPlayer()->getRace();
-
-    if (race == RACE_HUMAN || race == RACE_DWARF || race == RACE_NIGHTELF || race == RACE_GNOME || race == RACE_DRAENEI)
-    {
-        Entry = 1826;
-        strcpy(name, "|cffff6060A_HealBot");
-    }
-    else
-    {
-        Entry = 5473;
-        strcpy(name, "|cffff6060H_HealBot");
-    }
-
-    CreatureProto* pTemplate = CreatureProtoStorage.LookupEntry(Entry);
-    CreatureInfo const* pCreatureInfo = sMySQLStore.GetCreatureInfo(Entry);
-    if (!pTemplate || !pCreatureInfo)
-    {
-        RedSystemMessage(m_session, "Invalid creature spawn template: %u", Entry);
-        return true;
-    }
-    Player* plr = m_session->GetPlayer();
-    Creature* newguard = plr->create_guardian(Entry, 2 * 60 * 1000, float(-M_PI * 2), plr->getLevel());
-    AiAgentHealSupport* new_interface = new AiAgentHealSupport;
-    new_interface->Init(newguard, AITYPE_PET, MOVEMENTTYPE_NONE, plr);
-    newguard->ReplaceAIInterface((AIInterface*) new_interface);
-
-    /*    Pet *old_tame = plr->GetSummon();
-        if (old_tame != NULL)
-        {
-        old_tame->Dismiss(true);
-        }
-
-        // create a pet from this creature
-        Pet * pPet = objmgr.CreatePet(Entry);
-        pPet->SetInstanceID(plr->GetInstanceID());
-        pPet->SetMapId(plr->GetMapId());
-
-        pPet->SetFloatValue (OBJECT_FIELD_SCALE_X, pTemplate->Scale / 2); //we do not wish to block visually other players
-        AiAgentHealSupport *new_interface = new AiAgentHealSupport;
-        pPet->ReplaceAIInterface((AIInterface *) new_interface);
-        //    new_interface->Init(pPet,AITYPE_PET,MOVEMENTTYPE_NONE,plr); // i think this will get called automatically for pet
-
-        pPet->CreateAsSummon(Entry, pCreatureInfo, pCreature, plr, NULL, 0x2, 0);
-
-        pPet->Rename(name);
-
-        //healer bot should not have any specific actions
-        pPet->SetActionBarSlot(0,PET_SPELL_FOLLOW);
-        pPet->SetActionBarSlot(1,PET_SPELL_STAY);
-        pPet->SetActionBarSlot(2,0);
-        pPet->SetActionBarSlot(3,0);
-        pPet->SetActionBarSlot(4,0);
-        pPet->SetActionBarSlot(5,0);
-        pPet->SetActionBarSlot(6,0);
-        pPet->SetActionBarSlot(7,0);
-        pPet->SetActionBarSlot(8,0);
-        pPet->SetActionBarSlot(9,0);
-        pPet->SendSpellsToOwner();
-
-        // remove the temp creature
-        delete sp;
-        delete pCreature;*/
-
-    sGMLog.writefromsession(m_session, "used create an AI bot");
-    return true;
-}
-#endif
 
 bool ChatHandler::HandleAddPetSpellCommand(const char* args, WorldSession* m_session)
 {
@@ -1278,8 +1180,7 @@ bool ChatHandler::HandleRemoveItemCommand(const char* args, WorldSession* m_sess
         ++loop_count;
     }
 
-    ItemPrototype const* iProto = sMySQLStore.GetItemProto(item_id);
-
+    ItemProperties const* iProto = sMySQLStore.GetItemProperties(item_id);
     if (iProto)
     {
         sGMLog.writefromsession(m_session, "used remove item %s (id: %u) count %u from %s", iProto->Name.c_str(), item_id, ocount, plr->GetName());
@@ -1316,7 +1217,7 @@ void ChatHandler::SendHighlightedName(WorldSession* m_session, const char* prefi
     SystemMessage(m_session, message);
 }
 
-void ChatHandler::SendItemLinkToPlayer(ItemPrototype const* iProto, WorldSession* pSession, bool ItemCount, Player* owner, uint32 language)
+void ChatHandler::SendItemLinkToPlayer(ItemProperties const* iProto, WorldSession* pSession, bool ItemCount, Player* owner, uint32 language)
 {
     if (!iProto || !pSession)
         return;
@@ -1347,53 +1248,6 @@ void ChatHandler::SendItemLinkToPlayer(ItemPrototype const* iProto, WorldSession
             SystemMessage(pSession, "Item %u %s", iProto->ItemId, GetItemLinkByProto(iProto, language).c_str());
         }
     }
-}
-
-bool ChatHandler::HandleGORotate(const char* args, WorldSession* m_session)
-{
-    char Axis;
-    float deg;
-    if (sscanf(args, "%c %f", &Axis, &deg) < 1) return false;
-    GameObject* go = m_session->GetPlayer()->GetSelectedGo();
-    if (!go)
-    {
-        RedSystemMessage(m_session, "No selected GameObject...");
-        return true;
-    }
-
-    // float rad = deg * (float(M_PI) / 180.0f);
-
-    switch (tolower(Axis))
-    {
-        case 'x':
-            //        go->ModFloatValue(GAMEOBJECT_ROTATION, rad);
-            break;
-        case 'y':
-            //        go->ModFloatValue(GAMEOBJECT_ROTATION_01, rad);
-            break;
-        case 'o':
-            if (m_session->GetPlayer())
-            {
-                float ori = m_session->GetPlayer()->GetOrientation();
-                go->SetParentRotation(2, sinf(ori / 2));
-                go->SetParentRotation(3, cosf(ori / 2));
-                go->SetOrientation(ori);
-                go->UpdateRotation();
-            }
-            break;
-        default:
-            RedSystemMessage(m_session, "Invalid Axis, Please use x, y, or o.");
-            return true;
-    }
-
-    uint32 NewGuid = m_session->GetPlayer()->GetMapMgr()->GenerateGameobjectGuid();
-    go->RemoveFromWorld(true);
-    go->SetNewGuid(NewGuid);
-    go->PushToWorld(m_session->GetPlayer()->GetMapMgr());
-    go->SaveToDB();
-    //lets reselect the object that can be really annoying...
-    m_session->GetPlayer()->m_GM_SelectedGO = NewGuid;
-    return true;
 }
 
 struct spell_thingo
@@ -1774,7 +1628,7 @@ bool ChatHandler::HandleFixScaleCommand(const char* args, WorldSession* m_sessio
     }
 
     pCreature->SetScale(sc);
-    const_cast<CreatureProto*>(pCreature->GetProto())->Scale = sc;
+    const_cast<CreatureProperties*>(pCreature->GetCreatureProperties())->Scale = sc;
     WorldDatabase.Execute("UPDATE creature_proto SET scale = '%f' WHERE entry = %u", sc, pCreature->GetEntry());
     return true;
 }

@@ -385,11 +385,11 @@ void Object::_BuildMovementUpdate(ByteBuffer* data, uint16 flags, Player* target
                 flags2 |= MOVEFLAG_NO_COLLISION;        //0x400 Zack : Teribus the Cursed had flag 400 instead of 800 and he is flying all the time
             if (uThis->GetAIInterface()->onGameobject)
                 flags2 |= MOVEFLAG_ROOTED;
-            if (uThis->GetProto()->extra_a9_flags)
+            if (uThis->GetCreatureProperties()->extra_a9_flags)
             {
                 //do not send shit we can't honor
 #define UNKNOWN_FLAGS2 (0x00002000 | 0x04000000 | 0x08000000)
-                uint32 inherit = uThis->GetProto()->extra_a9_flags & UNKNOWN_FLAGS2;
+                uint32 inherit = uThis->GetCreatureProperties()->extra_a9_flags & UNKNOWN_FLAGS2;
                 flags2 |= inherit;
             }
         }
@@ -544,7 +544,7 @@ void Object::_BuildMovementUpdate(ByteBuffer* data, uint16 flags, Player* target
         uint32 vehicleid = 0;
 
         if (IsCreature())
-            vehicleid = static_cast< Creature* >(this)->GetProto()->vehicleid;
+            vehicleid = static_cast< Creature* >(this)->GetCreatureProperties()->vehicleid;
         else
             if (IsPlayer())
                 vehicleid = static_cast< Player* >(this)->mountvehicleid;
@@ -617,7 +617,7 @@ void Object::_BuildValuesUpdate(ByteBuffer* data, UpdateMask* updateMask, Player
         {
             GameObject* go = static_cast<GameObject*>(this);
             QuestLogEntry* qle;
-            GameObjectInfo const* gameobject_info;
+            GameObjectProperties const* gameobject_info;
             GameObject_QuestGiver* go_quest_giver = nullptr;
             if (go->GetType() == GAMEOBJECT_TYPE_QUESTGIVER)
                 go_quest_giver = static_cast<GameObject_QuestGiver*>(go);
@@ -630,8 +630,8 @@ void Object::_BuildValuesUpdate(ByteBuffer* data, UpdateMask* updateMask, Player
                     QuestRelation* qr = (*itr);
                     if (qr != NULL)
                     {
-                        Quest const* qst = qr->qst;
-                        if (qst != NULL)
+                        QuestProperties const* qst = qr->qst;
+                        if (qst != nullptr)
                         {
                             if ((qr->type & QUESTGIVER_QUEST_START && !target->HasQuest(qst->id))
                                 || (qr->type & QUESTGIVER_QUEST_END && target->HasQuest(qst->id))
@@ -646,7 +646,7 @@ void Object::_BuildValuesUpdate(ByteBuffer* data, UpdateMask* updateMask, Player
             }
             else
             {
-                gameobject_info = go->GetInfo();
+                gameobject_info = go->GetGameObjectProperties();
                 if (gameobject_info && (gameobject_info->goMap.size() || gameobject_info->itemMap.size()))
                 {
                     for (GameObjectGOMap::const_iterator itr = gameobject_info->goMap.begin(); itr != gameobject_info->goMap.end(); ++itr)
@@ -672,7 +672,7 @@ void Object::_BuildValuesUpdate(ByteBuffer* data, UpdateMask* updateMask, Player
                     if (!activate_quest_object)
                     {
                         for (GameObjectItemMap::const_iterator itr = gameobject_info->itemMap.begin();
-                             itr != go->GetInfo()->itemMap.end();
+                             itr != go->GetGameObjectProperties()->itemMap.end();
                              ++itr)
                         {
                             for (std::map<uint32, uint32>::const_iterator it2 = itr->second.begin();
@@ -787,7 +787,7 @@ bool Object::SetPosition(float newX, float newY, float newZ, float newOrientatio
     ARCEMU_ASSERT(!isnan(newX) && !isnan(newY) && !isnan(newOrientation));
 
     //It's a good idea to push through EVERY transport position change, no matter how small they are. By: VLack aka. VLsoft
-    if (IsGameObject() && static_cast< GameObject* >(this)->GetInfo()->type == GAMEOBJECT_TYPE_MO_TRANSPORT)
+    if (IsGameObject() && static_cast< GameObject* >(this)->GetGameObjectProperties()->type == GAMEOBJECT_TYPE_MO_TRANSPORT)
         updateMap = true;
 
     //if (m_position.x != newX || m_position.y != newY)

@@ -1035,9 +1035,11 @@ const ::DBC::Structures::AreaTableEntry* MapMgr::GetArea(float x, float y, float
         return MapManagement::AreaManagement::AreaStorage::GetAreaByMapId(_mapId);
 }
 
-bool MapMgr::InLineOfSight(float x, float y, float z, float x2, float y2, float z2)
+bool MapMgr::isInLineOfSight(float x, float y, float z, float x2, float y2, float z2)
 {
-    return _terrain->InLineOfSight(x, y, z, x2, y2, z2);
+    VMAP::IVMapManager* vmgr = VMAP::VMapFactory::createOrGetVMapManager();
+
+    return vmgr->isInLineOfSight(GetMapId(), x, y, z, x2, y2, z2);
 }
 
 uint32 MapMgr::GetMapId()
@@ -1644,8 +1646,8 @@ uint64 MapMgr::GenerateCreatureGUID(uint32 entry)
 {
     uint64 newguid = 0;
 
-    CreatureProto const* proto = sMySQLStore.GetCreatureProto(entry);
-    if ((proto == nullptr) || (proto->vehicleid == 0))
+    CreatureProperties const* creature_properties = sMySQLStore.GetCreatureProperties(entry);
+    if ((creature_properties == nullptr) || (creature_properties->vehicleid == 0))
         newguid = static_cast<uint64>(HIGHGUID_TYPE_UNIT) << 32;
     else
         newguid = static_cast<uint64>(HIGHGUID_TYPE_VEHICLE) << 32;
@@ -1693,7 +1695,7 @@ Creature* MapMgr::CreateCreature(uint32 entry)
 Creature* MapMgr::CreateAndSpawnCreature(uint32 pEntry, float pX, float pY, float pZ, float pO)
 {
     auto creature = CreateCreature(pEntry);
-    auto cp = sMySQLStore.GetCreatureProto(pEntry);
+    auto cp = sMySQLStore.GetCreatureProperties(pEntry);
     if (cp == nullptr)
         return nullptr;
 
@@ -1743,7 +1745,7 @@ Summon* MapMgr::CreateSummon(uint32 entry, SummonType type)
 // Spawns the object too, without which you can not interact with the object
 GameObject* MapMgr::CreateAndSpawnGameObject(uint32 entryID, float x, float y, float z, float o, float scale)
 {
-    auto gameobject_info = sMySQLStore.GetGameObjectInfo(entryID);
+    auto gameobject_info = sMySQLStore.GetGameObjectProperties(entryID);
     if (gameobject_info == nullptr)
     {
         LOG_DEBUG("Error looking up entry in CreateAndSpawnGameObject");

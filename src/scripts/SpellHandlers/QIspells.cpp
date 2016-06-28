@@ -1404,7 +1404,7 @@ bool HunterTamingQuest(uint32 i, Aura* a, bool apply)
             return true;
         }
 
-        Quest const* tamequest = sMySQLStore.GetQuest(triggerspell->EffectMiscValue[1]);
+        QuestProperties const* tamequest = sMySQLStore.GetQuestProperties(triggerspell->EffectMiscValue[1]);
         if (tamequest == NULL)
         {
             sLog.outError("An Aura with spellid %u is calling HunterTamingQuest() with an invalid tamequest id: %u", a->GetSpellId(), triggerspell->EffectMiscValue[1]);
@@ -1427,7 +1427,7 @@ bool HunterTamingQuest(uint32 i, Aura* a, bool apply)
                     tamed->GetAIInterface()->HandleEvent(EVENT_LEAVECOMBAT, p_caster, 0);
 
                     Pet* pPet = objmgr.CreatePet(tamed->GetEntry());
-                    if (!pPet->CreateAsSummon(tamed->GetEntry(), tamed->GetCreatureInfo(), tamed, p_caster, triggerspell, 2, 900000))
+                    if (!pPet->CreateAsSummon(tamed->GetEntry(), tamed->GetCreatureProperties(), tamed, p_caster, triggerspell, 2, 900000))
                     {
                         pPet->DeleteMe();//CreateAsSummon() returns false if an error occurred.
                         pPet = NULL;
@@ -1436,7 +1436,7 @@ bool HunterTamingQuest(uint32 i, Aura* a, bool apply)
                     tamed->Despawn(1, 0); //we despawn the tamed creature once we are out of Aura::Remove()
 
                     QuestLogEntry* qle = p_caster->GetQuestLogForEntry(tamequest->id);
-                    if (qle != NULL)
+                    if (qle != nullptr)
                     {
                         qle->SetMobCount(0, 1);
                         qle->SendUpdateAddKill(1);
@@ -1481,12 +1481,10 @@ bool ArcaneDisruption(uint32 i, Aura* pAura, bool apply)
         if (pQuest->GetMobCount(0) == 5)
         {
             //weee, Uther
-            CreatureProto const* cp = sMySQLStore.GetCreatureProto(26528);
-            CreatureInfo const* ci = sMySQLStore.GetCreatureInfo(26528);
-            Creature* c = NULL;
-            if (cp && ci)
+            CreatureProperties const* cp = sMySQLStore.GetCreatureProperties(26528);
+            if (cp != nullptr)
             {
-                c = plr->GetMapMgr()->CreateCreature(26528);
+                Creature* c = plr->GetMapMgr()->CreateCreature(26528);
                 if (c)
                 {
                     //position is guessed

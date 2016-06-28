@@ -20,6 +20,7 @@
  */
 
 #include "StdAfx.h"
+#include <G3D/Quat.h>
 
 GameObject::GameObject(uint64 guid)
 {
@@ -42,13 +43,15 @@ GameObject::GameObject(uint64 guid)
     invisibilityFlag = INVIS_FLAG_NORMAL;
     m_summoner = NULL;
     charges = -1;
-    pInfo = NULL;
+    gameobject_properties = nullptr;
     myScript = NULL;
     m_spawn = 0;
     m_deleted = false;
     m_respawnCell = NULL;
     m_rotation = 0;
     m_overrides = 0;
+
+    m_model = NULL;
 }
 
 GameObject::~GameObject()
@@ -83,8 +86,8 @@ GameObject::~GameObject()
 
 bool GameObject::CreateFromProto(uint32 entry, uint32 mapid, float x, float y, float z, float ang, float r0, float r1, float r2, float r3, uint32 overrides)
 {
-    pInfo = sMySQLStore.GetGameObjectInfo(entry);
-    if (pInfo == nullptr)
+    gameobject_properties = sMySQLStore.GetGameObjectProperties(entry);
+    if (gameobject_properties == nullptr)
     {
         LOG_ERROR("Something tried to create a GameObject with invalid entry %u", entry);
         return false;
@@ -94,20 +97,13 @@ bool GameObject::CreateFromProto(uint32 entry, uint32 mapid, float x, float y, f
     SetEntry(entry);
 
     m_overrides = overrides;
-    //	SetFloatValue(GAMEOBJECT_POS_X, x);
-    //	SetFloatValue(GAMEOBJECT_POS_Y, y);
-    //	SetFloatValue(GAMEOBJECT_POS_Z, z);
-    //	SetFloatValue(GAMEOBJECT_FACING, ang);
+    SetRotationQuat(r0, r1, r2, r3);
     SetPosition(x, y, z, ang);
-    SetParentRotation(0, r0);
-    SetParentRotation(1, r1);
-    SetParentRotation(2, r2);
-    SetParentRotation(3, r3);
-    UpdateRotation();
+    //UpdateRotation();
     SetAnimProgress(0);
     SetState(1);
-    SetDisplayId(pInfo->display_id);
-    SetType(static_cast<uint8>(pInfo->type));
+    SetDisplayId(gameobject_properties->display_id);
+    SetType(static_cast<uint8>(gameobject_properties->type));
     InitAI();
 
     return true;
@@ -220,8 +216,8 @@ void GameObject::SaveToDB()
         << GetPositionY() << ","
         << GetPositionZ() << ","
         << GetOrientation() << ","
-        << uint64(0) << ","
         << GetParentRotation(0) << ","
+        << GetParentRotation(1) << ","
         << GetParentRotation(2) << ","
         << GetParentRotation(3) << ","
         << "0,"              // initial state
@@ -247,9 +243,8 @@ void GameObject::SaveToFile(std::stringstream & name)
         << GetPositionY() << ","
         << GetPositionZ() << ","
         << GetOrientation() << ","
-        //		<< GetUInt64Value(GAMEOBJECT_ROTATION) << ","
-        << uint64(0) << ","
         << GetParentRotation(0) << ","
+        << GetParentRotation(1) << ","
         << GetParentRotation(2) << ","
         << GetParentRotation(3) << ","
         << GetState() << ","
@@ -377,7 +372,7 @@ void GameObject::RemoveFromWorld(bool free_guid)
 uint32 GameObject::GetGOReqSkill()
 {
     // Here we check the SpellFocus table against the dbcs
-    auto lock = sLockStore.LookupEntry(GetInfo()->raw.parameter_0);
+    auto lock = sLockStore.LookupEntry(GetGameObjectProperties()->raw.parameter_0);
     if (!lock)
         return 0;
 
@@ -389,64 +384,62 @@ uint32 GameObject::GetGOReqSkill()
     return 0;
 }
 
-//! Set GameObject rotational value
-void GameObject::SetRotation(float rad)
+using G3D::Quat;
+struct QuaternionCompressed
 {
-    if (rad > M_PI_FLOAT)
-        rad -= 2 * M_PI_FLOAT;
-    else if (rad < -M_PI_FLOAT)
-        rad += 2 * M_PI_FLOAT;
-    float sin = sinf(rad / 2.f);
+    QuaternionCompressed() : m_raw(0) {}
+    QuaternionCompressed(int64 val) : m_raw(val) {}
+    QuaternionCompressed(const Quat& quat) { Set(quat); }
 
-    if (sin >= 0)
-        rad = 1.f + 0.125f * sin;
-    else
-        rad = 1.25f + 0.125f * sin;
-}
-
-void GameObject::UpdateRotation()
-{
-    static double const atan_pow = atan(pow(2.0f, -20.0f));
-
-    double f_rot1 = sin(GetOrientation() / 2.0f);
-    double f_rot2 = cos(GetOrientation() / 2.0f);
-
-    int64 i_rot1 = int64(f_rot1 / atan_pow * (f_rot2 >= 0 ? 1.0f : -1.0f));
-    int64 rotation = (i_rot1 << 43 >> 43) & 0x00000000001FFFFF;
-
-    m_rotation = rotation;
-
-    float r2 = GetParentRotation(2);
-    float r3 = GetParentRotation(3);
-    if (r2 == 0.0f && r3 == 0.0f && !(m_overrides & GAMEOBJECT_OVERRIDE_PARENTROT))
+    enum
     {
-        r2 = (float)f_rot1;
-        r3 = (float)f_rot2;
-        SetParentRotation(2, r2);
-        SetParentRotation(3, r3);
-    }
-}
+        PACK_COEFF_YZ = 1 << 20,
+        PACK_COEFF_X = 1 << 21,
+    };
 
-void GameObject::UpdateRotationFields(float rotation2 /*=0.0f*/, float rotation3 /*=0.0f*/)
-{
-    static double const atan_pow = atan(pow(2.0f, -20.0f));
-
-    double f_rot1 = std::sin(GetOrientation() / 2.0f);
-    double f_rot2 = std::cos(GetOrientation() / 2.0f);
-
-    int64 i_rot1 = int64(f_rot1 / atan_pow *(f_rot2 >= 0 ? 1.0f : -1.0f));
-    int64 rotation = (i_rot1 << 43 >> 43) & 0x00000000001FFFFF;
-
-    m_rotation = rotation;
-
-    if (rotation2 == 0.0f && rotation3 == 0.0f)
+    void Set(const Quat& quat)
     {
-        rotation2 = (float)f_rot1;
-        rotation3 = (float)f_rot2;
+        int8 w_sign = (quat.w >= 0 ? 1 : -1);
+        int64 X = int32(quat.x * PACK_COEFF_X) * w_sign & ((1 << 22) - 1);
+        int64 Y = int32(quat.y * PACK_COEFF_YZ) * w_sign & ((1 << 21) - 1);
+        int64 Z = int32(quat.z * PACK_COEFF_YZ) * w_sign & ((1 << 21) - 1);
+        m_raw = Z | (Y << 21) | (X << 42);
     }
 
-    SetFloatValue(GAMEOBJECT_PARENTROTATION + 2, rotation2);
-    SetFloatValue(GAMEOBJECT_PARENTROTATION + 3, rotation3);
+    Quat Unpack() const
+    {
+        double x = (double)(m_raw >> 42) / (double)PACK_COEFF_X;
+        double y = (double)(m_raw << 22 >> 43) / (double)PACK_COEFF_YZ;
+        double z = (double)(m_raw << 43 >> 43) / (double)PACK_COEFF_YZ;
+        double w = 1 - (x * x + y * y + z * z);
+        ARCEMU_ASSERT(w >= 0);
+        w = sqrt(w);
+        
+        return Quat(x, y, z, w);
+    }
+
+    int64 m_raw;
+};
+
+void GameObject::SetRotationQuat(float qx, float qy, float qz, float qw)
+{
+    Quat quat(qx, qy, qz, qw);
+    // Temporary solution for gameobjects that has no rotation data in DB:
+    if (qz == 0 && qw == 0)
+        quat = Quat::fromAxisAngleRotation(G3D::Vector3::unitZ(), GetOrientation());
+
+    quat.unitize();
+    m_rotation = QuaternionCompressed(quat).m_raw;
+    SetFloatValue(GAMEOBJECT_PARENTROTATION+0, quat.x);
+    SetFloatValue(GAMEOBJECT_PARENTROTATION+1, quat.y);
+    SetFloatValue(GAMEOBJECT_PARENTROTATION+2, quat.z);
+    SetFloatValue(GAMEOBJECT_PARENTROTATION+3, quat.w);
+}
+
+void GameObject::SetRotationAngles(float z_rot, float y_rot, float x_rot)
+{
+    Quat quat(G3D::Matrix3::fromEulerAnglesZYX(z_rot, y_rot, x_rot));
+    SetRotationQuat(quat.x, quat.y, quat.z, quat.w);
 }
 
 void GameObject::CastSpell(uint64 TargetGUID, SpellEntry* sp)
@@ -467,7 +460,7 @@ void GameObject::CastSpell(uint64 TargetGUID, uint32 SpellID)
     SpellEntry* sp = dbcSpell.LookupEntryForced(SpellID);
     if (sp == nullptr)
     {
-        sLog.outError("GameObject %u tried to cast a non-existing Spell %u.", pInfo->entry, SpellID);
+        sLog.outError("GameObject %u tried to cast a non-existing Spell %u.", gameobject_properties->entry, SpellID);
         return;
     }
 
@@ -486,7 +479,7 @@ void GameObject_Door::InitAI()
 {
     GameObject::InitAI();
 
-    if (pInfo->door.start_open != 0)
+    if (gameobject_properties->door.start_open != 0)
         SetState(GO_STATE_OPEN);
     else
         SetState(GO_STATE_CLOSED);
@@ -495,8 +488,8 @@ void GameObject_Door::InitAI()
 void GameObject_Door::Open()
 {
     SetState(GO_STATE_OPEN);
-    if (pInfo->door.auto_close_time != 0)
-        sEventMgr.AddEvent(this, &GameObject_Door::Close, 0, pInfo->door.auto_close_time, 1, 0);
+    if (gameobject_properties->door.auto_close_time != 0)
+        sEventMgr.AddEvent(this, &GameObject_Door::Close, 0, gameobject_properties->door.auto_close_time, 1, 0);
 }
 
 void GameObject_Door::Close()
@@ -532,12 +525,12 @@ void GameObject_Button::InitAI()
 {
     GameObject::InitAI();
 
-    if (pInfo->button.start_open != 0)
+    if (gameobject_properties->button.start_open != 0)
         SetState(GO_STATE_OPEN);
 
-    if (pInfo->button.linked_trap_id != 0)
+    if (gameobject_properties->button.linked_trap_id != 0)
     {
-        GameObjectInfo const* gameobject_info = sMySQLStore.GetGameObjectInfo(pInfo->button.linked_trap_id);
+        GameObjectProperties const* gameobject_info = sMySQLStore.GetGameObjectProperties(gameobject_properties->button.linked_trap_id);
 
         if (gameobject_info != nullptr)
         {
@@ -550,8 +543,8 @@ void GameObject_Button::InitAI()
 void GameObject_Button::Open()
 {
     SetState(GO_STATE_OPEN);
-    if (pInfo->button.auto_close_time != 0)
-        sEventMgr.AddEvent(this, &GameObject_Button::Close, EVENT_GAMEOBJECT_CLOSE, pInfo->button.auto_close_time, 1, 0);
+    if (gameobject_properties->button.auto_close_time != 0)
+        sEventMgr.AddEvent(this, &GameObject_Button::Close, EVENT_GAMEOBJECT_CLOSE, gameobject_properties->button.auto_close_time, 1, 0);
 }
 
 void GameObject_Button::Close()
@@ -606,7 +599,7 @@ void GameObject_QuestGiver::DeleteQuest(QuestRelation* Q)
     }
 }
 
-Quest const* GameObject_QuestGiver::FindQuest(uint32 quest_id, uint8 quest_relation)
+QuestProperties const* GameObject_QuestGiver::FindQuest(uint32 quest_id, uint8 quest_relation)
 {
     for (std::list<QuestRelation*>::iterator itr = m_quests->begin(); itr != m_quests->end(); ++itr)
     {
@@ -649,9 +642,9 @@ void GameObject_Chest::InitAI()
 {
     GameObject::InitAI();
 
-    if (pInfo->chest.linked_trap_id != 0)
+    if (gameobject_properties->chest.linked_trap_id != 0)
     {
-        GameObjectInfo const* gameobject_info = sMySQLStore.GetGameObjectInfo(pInfo->chest.linked_trap_id);
+        GameObjectProperties const* gameobject_info = sMySQLStore.GetGameObjectProperties(gameobject_properties->chest.linked_trap_id);
 
         if (gameobject_info != nullptr)
         {
@@ -719,7 +712,7 @@ void GameObject_Trap::InitAI()
 {
     ///\brief prevent traps from casting periodic spells. This can be removed until proper event handling.
     // e.g. BootyBay
-    switch (pInfo->entry)
+    switch (gameobject_properties->entry)
     {
         case 171941:
         case 175791:
@@ -730,20 +723,20 @@ void GameObject_Trap::InitAI()
             return;
     }
 
-    spell = dbcSpell.LookupEntryForced(pInfo->trap.spell_id);
-    charges = pInfo->trap.charges;
+    spell = dbcSpell.LookupEntryForced(gameobject_properties->trap.spell_id);
+    charges = gameobject_properties->trap.charges;
 
-    if (pInfo->trap.stealthed != 0)
+    if (gameobject_properties->trap.stealthed != 0)
     {
         invisible = true;
         invisibilityFlag = INVIS_FLAG_TRAP;
     }
 
-    cooldown = pInfo->trap.cooldown * 1000;
+    cooldown = gameobject_properties->trap.cooldown * 1000;
     if (cooldown < 1000)
         cooldown = 1000;
 
-    maxdistance = sqrt(float(pInfo->trap.radius));
+    maxdistance = sqrt(float(gameobject_properties->trap.radius));
     if (maxdistance == 0.0f)
         maxdistance = 1.0f;
 
@@ -814,7 +807,7 @@ void GameObject_Trap::Update(unsigned long time_passed)
                 if (charges != 0)
                     charges--;
 
-                if (m_summonedGo && pInfo->trap.charges != 0 && charges == 0)
+                if (m_summonedGo && gameobject_properties->trap.charges != 0 && charges == 0)
                 {
                     ExpireAndDelete();
                     return;
@@ -845,20 +838,20 @@ void GameObject_SpellFocus::OnPushToWorld()
 
 void GameObject_SpellFocus::SpawnLinkedTrap()
 {
-    uint32 trapid = pInfo->spell_focus.linked_trap_id;
+    uint32 trapid = gameobject_properties->spell_focus.linked_trap_id;
     if (trapid == 0)
         return;
 
     GameObject* go = m_mapMgr->CreateGameObject(trapid);
     if (go == nullptr)
     {
-        sLog.outError("Failed to create linked trap for GameObject %u ( %s ).", pInfo->entry, pInfo->name.c_str());
+        sLog.outError("Failed to create linked trap for GameObject %u ( %s ).", gameobject_properties->entry, gameobject_properties->name.c_str());
         return;
     }
 
     if (!go->CreateFromProto(trapid, m_mapId, m_position.x, m_position.y, m_position.z, m_position.o))
     {
-        sLog.outError("Failed CreateFromProto for linked trap of GameObject %u ( %s ).", pInfo->entry, pInfo->name.c_str());
+        sLog.outError("Failed CreateFromProto for linked trap of GameObject %u ( %s ).", gameobject_properties->entry, gameobject_properties->name.c_str());
         return;
     }
 
@@ -881,9 +874,9 @@ void GameObject_Goober::InitAI()
 {
     GameObject::InitAI();
 
-    if (pInfo->goober.linked_trap_id != 0)
+    if (gameobject_properties->goober.linked_trap_id != 0)
     {
-        GameObjectInfo const* gameobject_info = sMySQLStore.GetGameObjectInfo(pInfo->goober.linked_trap_id);
+        GameObjectProperties const* gameobject_info = sMySQLStore.GetGameObjectProperties(gameobject_properties->goober.linked_trap_id);
         if (gameobject_info != nullptr)
         {
             if (gameobject_info->trap.spell_id != 0)
@@ -895,8 +888,8 @@ void GameObject_Goober::InitAI()
 void GameObject_Goober::Open()
 {
     SetState(GO_STATE_OPEN);
-    if (pInfo->goober.auto_close_time != 0)
-        sEventMgr.AddEvent(this, &GameObject_Goober::Close, EVENT_GAMEOBJECT_CLOSE, pInfo->goober.auto_close_time, 1, 0);
+    if (gameobject_properties->goober.auto_close_time != 0)
+        sEventMgr.AddEvent(this, &GameObject_Goober::Close, EVENT_GAMEOBJECT_CLOSE, gameobject_properties->goober.auto_close_time, 1, 0);
 }
 
 void GameObject_Goober::Close()
@@ -1008,7 +1001,7 @@ GameObject_Ritual::~GameObject_Ritual()
 
 void GameObject_Ritual::InitAI()
 {
-    Ritual = new CRitual(pInfo->summoning_ritual.req_participants);
+    Ritual = new CRitual(gameobject_properties->summoning_ritual.req_participants);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -1023,11 +1016,11 @@ GameObject_SpellCaster::~GameObject_SpellCaster()
 
 void GameObject_SpellCaster::InitAI()
 {
-    charges = pInfo->spell_caster.charges;
+    charges = gameobject_properties->spell_caster.charges;
 
-    spell = dbcSpell.LookupEntry(pInfo->spell_caster.spell_id);
+    spell = dbcSpell.LookupEntry(gameobject_properties->spell_caster.spell_id);
     if (spell == nullptr)
-        sLog.outError("GameObject %u ( %s ) has a nonexistant spellID in the database.", pInfo->entry, pInfo->name.c_str());
+        sLog.outError("GameObject %u ( %s ) has a nonexistant spellID in the database.", gameobject_properties->entry, gameobject_properties->name.c_str());
 }
 
 void GameObject_SpellCaster::Use(uint64 GUID)
@@ -1075,7 +1068,7 @@ void GameObject_FishingHole::CatchFish()
 void GameObject_FishingHole::CalcFishRemaining(bool force)
 {
     if (force || (usage_remaining == 0))
-        usage_remaining = pInfo->fishinghole.min_success_opens + RandomUInt(pInfo->fishinghole.max_success_opens - pInfo->fishinghole.min_success_opens) - 1;
+        usage_remaining = gameobject_properties->fishinghole.min_success_opens + RandomUInt(gameobject_properties->fishinghole.max_success_opens - gameobject_properties->fishinghole.min_success_opens) - 1;
 }
 
 bool GameObject_FishingHole::HasLoot()
@@ -1121,7 +1114,7 @@ void GameObject_Destructible::Damage(uint32 damage, uint64 AttackerGUID, uint64 
 
         SetFlags(GO_FLAG_DESTROYED);
         SetFlags(GetFlags() & ~GO_FLAG_DAMAGED);
-        SetDisplayId(pInfo->destructible_building.destroyed_display_id);   // destroyed display id
+        SetDisplayId(gameobject_properties->destructible_building.destroyed_display_id);   // destroyed display id
 
         CALL_GO_SCRIPT_EVENT(this, OnDestroyed)();
 
@@ -1136,10 +1129,10 @@ void GameObject_Destructible::Damage(uint32 damage, uint64 AttackerGUID, uint64 
             // Intact  ->  Damaged
 
             // Are we below the intact-damaged transition treshold?
-            if (hitpoints <= (maxhitpoints - pInfo->destructible_building.intact_num_hits))
+            if (hitpoints <= (maxhitpoints - gameobject_properties->destructible_building.intact_num_hits))
             {
                 SetFlags(GO_FLAG_DAMAGED);
-                SetDisplayId(pInfo->destructible_building.damaged_display_id); // damaged display id
+                SetDisplayId(gameobject_properties->destructible_building.damaged_display_id); // damaged display id
             }
         }
         else
@@ -1148,7 +1141,7 @@ void GameObject_Destructible::Damage(uint32 damage, uint64 AttackerGUID, uint64 
             {
                 SetFlags(GetFlags() & ~GO_FLAG_DAMAGED);
                 SetFlags(GO_FLAG_DESTROYED);
-                SetDisplayId(pInfo->destructible_building.destroyed_display_id);
+                SetDisplayId(gameobject_properties->destructible_building.destroyed_display_id);
             }
         }
 
@@ -1175,8 +1168,8 @@ void GameObject_Destructible::SendDamagePacket(uint32 damage, uint64 AttackerGUI
 void GameObject_Destructible::Rebuild()
 {
     SetFlags(GetFlags() & uint32(~(GO_FLAG_DAMAGED | GO_FLAG_DESTROYED)));
-    SetDisplayId(pInfo->display_id);
-    maxhitpoints = pInfo->destructible_building.intact_num_hits + pInfo->destructible_building.damaged_num_hits;
+    SetDisplayId(gameobject_properties->display_id);
+    maxhitpoints = gameobject_properties->destructible_building.intact_num_hits + gameobject_properties->destructible_building.damaged_num_hits;
     hitpoints = maxhitpoints;
 }
 

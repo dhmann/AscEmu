@@ -53,11 +53,11 @@ void GameEventMgr::LoadFromDB()
         const char* cleanEventSaveQuery = "DELETE FROM event_save WHERE state<>4";
         CharacterDatabase.Execute(cleanEventSaveQuery);
     }
-    // Loading event_names
+    // Loading event_properties
     {
         const char* loadAllEventsQuery = "SELECT entry, UNIX_TIMESTAMP(start_time), UNIX_TIMESTAMP(end_time), occurence,\
                                           length, holiday, description, world_event, announce\
-                                          FROM event_names WHERE entry > 0";
+                                          FROM event_properties WHERE entry > 0";
         QueryResult* result = WorldDatabase.Query(loadAllEventsQuery);
         if (!result)
         {
@@ -96,7 +96,7 @@ void GameEventMgr::LoadFromDB()
             //}
         } while (result->NextRow());
         delete result;
-        Log.Success("GameEventMgr", "%u events loaded from table event_names", pCount);
+        Log.Success("GameEventMgr", "%u events loaded from table event_properties", pCount);
     }
     // Loading event_saves from CharacterDB
     Log.Notice("GameEventMgr", "Start loading event_save");
@@ -174,10 +174,10 @@ void GameEventMgr::LoadFromDB()
                 dbResult.event_entry = field[0].GetUInt32();
                 dbResult.id = field[1].GetUInt32();
                 dbResult.entry = field[2].GetUInt32();
-                auto creature_info = sMySQLStore.GetCreatureInfo(dbResult.entry);
-                if (creature_info == nullptr)
+                auto creature_properties = sMySQLStore.GetCreatureProperties(dbResult.entry);
+                if (creature_properties == nullptr)
                 {
-                    Log.Error("GameEventMgr", "Could not create CreatureSpawn for invalid entry %u (missing in table creature_names)", dbResult.entry);
+                    Log.Error("GameEventMgr", "Could not create CreatureSpawn for invalid entry %u (missing in table creature_properties)", dbResult.entry);
                     continue;
                 }
                 dbResult.map_id = field[3].GetUInt16();
@@ -252,10 +252,10 @@ void GameEventMgr::LoadFromDB()
                 dbResult.event_entry = field[0].GetUInt32();
                 dbResult.id = field[1].GetUInt32();
                 dbResult.entry = field[2].GetUInt32();
-                auto gameobject_info = sMySQLStore.GetGameObjectInfo(dbResult.entry);
+                auto gameobject_info = sMySQLStore.GetGameObjectProperties(dbResult.entry);
                 if (gameobject_info == nullptr)
                 {
-                    Log.Error("GameEventMgr", "Could not create GameobjectSpawn for invalid entry %u (missing in table gameobject_names)", dbResult.entry);
+                    Log.Error("GameEventMgr", "Could not create GameobjectSpawn for invalid entry %u (missing in table gameobject_properties)", dbResult.entry);
                     continue;
                 }
                 dbResult.map_id = field[3].GetUInt32();

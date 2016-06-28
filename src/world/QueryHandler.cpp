@@ -78,7 +78,7 @@ void WorldSession::HandleCreatureQueryOpcode(WorldPacket& recv_data)
     WorldPacket data(SMSG_CREATURE_QUERY_RESPONSE, 250); //VLack: thanks Aspire, this was 146 before
     uint32 entry;
     uint64 guid;
-    CreatureInfo const* ci;
+    CreatureProperties const* ci;
 
     recv_data >> entry;
     recv_data >> guid;
@@ -99,7 +99,7 @@ void WorldSession::HandleCreatureQueryOpcode(WorldPacket& recv_data)
     }
     else
     {
-        ci = sMySQLStore.GetCreatureInfo(entry);
+        ci = sMySQLStore.GetCreatureProperties(entry);
         if (ci == NULL)
             return;
 
@@ -169,7 +169,7 @@ void WorldSession::HandleGameObjectQueryOpcode(WorldPacket& recv_data)
 
     LOG_DETAIL("WORLD: CMSG_GAMEOBJECT_QUERY '%u'", entryID);
 
-    auto gameobject_info = sMySQLStore.GetGameObjectInfo(entryID);
+    auto gameobject_info = sMySQLStore.GetGameObjectProperties(entryID);
     if (gameobject_info == nullptr)
         return;
 
@@ -328,7 +328,7 @@ void WorldSession::HandleItemNameQueryOpcode(WorldPacket& recv_data)
 
     std::string Name = ("Unknown Item");
 
-    ItemPrototype const* proto = sMySQLStore.GetItemProto(itemid);
+    ItemProperties const* proto = sMySQLStore.GetItemProperties(itemid);
     if (proto != nullptr)
     {
         LocalizedItem* li = (language > 0) ? sLocalizationMgr.GetLocalizedItem(itemid, language) : NULL;

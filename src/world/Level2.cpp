@@ -192,7 +192,7 @@ bool ChatHandler::HandleItemCommand(const char* args, WorldSession* m_session)
         return true;
     }
 
-    ItemPrototype const* tmpItem = sMySQLStore.GetItemProto(item);
+    ItemProperties const* tmpItem = sMySQLStore.GetItemProperties(item);
 
     std::stringstream sstext;
     if (tmpItem)
@@ -252,7 +252,7 @@ bool ChatHandler::HandleItemRemoveCommand(const char* args, WorldSession* m_sess
         WorldDatabase.Execute(ss.str().c_str());
 
         pCreature->RemoveVendorItem(itemguid);
-        ItemPrototype const* tmpItem = sMySQLStore.GetItemProto(itemguid);
+        ItemProperties const* tmpItem = sMySQLStore.GetItemProperties(itemguid);
         if (tmpItem)
         {
             sstext << "Item '" << itemguid << "' '" << tmpItem->Name.c_str() << "' Deleted from list" << '\0';
@@ -307,7 +307,7 @@ bool ChatHandler::HandleCastSpellCommand(const char* args, WorldSession* m_sessi
                 sGMLog.writefromsession(m_session, "cast spell %d on PLAYER %s", spellid, static_cast< Player* >(target)->GetName());
             break;
         case TYPEID_UNIT:
-            sGMLog.writefromsession(m_session, "cast spell %d on CREATURE %u [%s], sqlid %u", spellid, static_cast< Creature* >(target)->GetEntry(), static_cast< Creature* >(target)->GetCreatureInfo()->Name.c_str(), static_cast< Creature* >(target)->GetSQL_id());
+            sGMLog.writefromsession(m_session, "cast spell %d on CREATURE %u [%s], sqlid %u", spellid, static_cast< Creature* >(target)->GetEntry(), static_cast< Creature* >(target)->GetCreatureProperties()->Name.c_str(), static_cast< Creature* >(target)->GetSQL_id());
             break;
     }
 
@@ -368,7 +368,7 @@ bool ChatHandler::HandleCastSpellNECommand(const char* args, WorldSession* m_ses
                 sGMLog.writefromsession(m_session, "cast spell %d on PLAYER %s", spellId, static_cast< Player* >(target)->GetName());
             break;
         case TYPEID_UNIT:
-            sGMLog.writefromsession(m_session, "cast spell %d on CREATURE %u [%s], sqlid %u", spellId, static_cast< Creature* >(target)->GetEntry(), static_cast< Creature* >(target)->GetCreatureInfo()->Name.c_str(), static_cast< Creature* >(target)->GetSQL_id());
+            sGMLog.writefromsession(m_session, "cast spell %d on CREATURE %u [%s], sqlid %u", spellId, static_cast< Creature* >(target)->GetEntry(), static_cast< Creature* >(target)->GetCreatureProperties()->Name.c_str(), static_cast< Creature* >(target)->GetSQL_id());
             break;
     }
 
@@ -408,7 +408,7 @@ bool ChatHandler::HandleCastSelfCommand(const char* args, WorldSession* m_sessio
                 sGMLog.writefromsession(m_session, "used castself with spell %d on PLAYER %s", spellid, static_cast< Player* >(target)->GetName());
             break;
         case TYPEID_UNIT:
-            sGMLog.writefromsession(m_session, "used castself with spell %d on CREATURE %u [%s], sqlid %u", spellid, static_cast< Creature* >(target)->GetEntry(), static_cast< Creature* >(target)->GetCreatureInfo()->Name.c_str(), static_cast< Creature* >(target)->GetSQL_id());
+            sGMLog.writefromsession(m_session, "used castself with spell %d on CREATURE %u [%s], sqlid %u", spellid, static_cast< Creature* >(target)->GetEntry(), static_cast< Creature* >(target)->GetCreatureProperties()->Name.c_str(), static_cast< Creature* >(target)->GetSQL_id());
             break;
     }
 
@@ -486,8 +486,12 @@ bool ChatHandler::HandleGOSelect(const char* args, WorldSession* m_session)
 
     m_session->GetPlayer()->m_GM_SelectedGO = GObj->GetGUID();
 
+    //reset last rotation values on selecting a new go.
+    m_session->GetPlayer()->go_last_x_rotation = 0.0f;
+    m_session->GetPlayer()->go_last_y_rotation = 0.0f;
+
     GreenSystemMessage(m_session, "Selected GameObject [ %s ] which is %.3f meters away from you.",
-        sMySQLStore.GetGameObjectInfo(GObj->GetEntry())->name.c_str(), m_session->GetPlayer()->CalcDistance(GObj));
+        sMySQLStore.GetGameObjectProperties(GObj->GetEntry())->name.c_str(), m_session->GetPlayer()->CalcDistance(GObj));
 
     return true;
 }
@@ -529,7 +533,7 @@ bool ChatHandler::HandleGODelete(const char* args, WorldSession* m_session)
             GObj->m_spawn = NULL;
         }
     }
-    sGMLog.writefromsession(m_session, "deleted game object entry %u on map %u at X:%f Y:%f Z:%f Name %s", GObj->GetEntry(), GObj->GetMapId(), GObj->GetPositionX(), GObj->GetPositionY(), GObj->GetPositionZ(), sMySQLStore.GetGameObjectInfo(GObj->GetEntry())->name.c_str());
+    sGMLog.writefromsession(m_session, "deleted game object entry %u on map %u at X:%f Y:%f Z:%f Name %s", GObj->GetEntry(), GObj->GetMapId(), GObj->GetPositionX(), GObj->GetPositionY(), GObj->GetPositionZ(), sMySQLStore.GetGameObjectProperties(GObj->GetEntry())->name.c_str());
     GObj->Despawn(0, 0); // We do not need to delete the object because GameObject::Despawn with no time => ExpireAndDelete() => _Expire() => delete GObj;
 
     m_session->GetPlayer()->m_GM_SelectedGO = 0;
@@ -539,7 +543,7 @@ bool ChatHandler::HandleGODelete(const char* args, WorldSession* m_session)
 
 bool ChatHandler::HandleGOInfo(const char* args, WorldSession* m_session)
 {
-    GameObjectInfo const* gameobject_info = nullptr;
+    GameObjectProperties const* gameobject_info = nullptr;
     auto gameobject = m_session->GetPlayer()->GetSelectedGo();
     if (!gameobject)
     {
@@ -653,7 +657,7 @@ bool ChatHandler::HandleGOInfo(const char* args, WorldSession* m_session)
 
     SystemMessage(m_session, "%s Distance:%s%f", MSG_COLOR_GREEN, MSG_COLOR_LIGHTBLUE, gameobject->CalcDistance(m_session->GetPlayer()));
 
-    gameobject_info = sMySQLStore.GetGameObjectInfo(gameobject->GetEntry());
+    gameobject_info = sMySQLStore.GetGameObjectProperties(gameobject->GetEntry());
     if (!gameobject_info)
     {
         RedSystemMessage(m_session, "This GameObject doesn't have template, you won't be able to get some information nor to spawn a GO with this entry.");
@@ -700,7 +704,7 @@ bool ChatHandler::HandleGOEnable(const char* args, WorldSession* m_session)
         GObj->Activate();
         BlueSystemMessage(m_session, "Gameobject activated.");
     }
-    sGMLog.writefromsession(m_session, "activated/deactivated gameobject %s, entry %u", sMySQLStore.GetGameObjectInfo(GObj->GetEntry())->name.c_str(), GObj->GetEntry());
+    sGMLog.writefromsession(m_session, "activated/deactivated gameobject %s, entry %u", sMySQLStore.GetGameObjectProperties(GObj->GetEntry())->name.c_str(), GObj->GetEntry());
     return true;
 }
 

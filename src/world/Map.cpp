@@ -190,11 +190,10 @@ void Map::LoadSpawns(bool reload)
                     cspawn->form = FormationMgr::getSingleton().GetFormation(cspawn->id);
 
                     uint32 creature_entry = fields[1].GetUInt32();
-                    auto creature_info = sMySQLStore.GetCreatureInfo(creature_entry);
-                    auto creature_proto = sMySQLStore.GetCreatureProto(creature_entry);
-                    if (creature_info == nullptr || creature_proto == nullptr)
+                    auto creature_properties = sMySQLStore.GetCreatureProperties(creature_entry);
+                    if (creature_properties == nullptr)
                     {
-                        Log.Error("Map::LoadSpawns", "Creature spawn ID: %u has invalid entry: %u which is not in creature_names/creature_proto table! Skipped loading.", cspawn->id, creature_entry);
+                        Log.Error("Map::LoadSpawns", "Creature spawn ID: %u has invalid entry: %u which is not in creature_properties table! Skipped loading.", cspawn->id, creature_entry);
                         delete cspawn;
                         continue;
                     }
@@ -353,10 +352,10 @@ void Map::LoadSpawns(bool reload)
                     go_spawn->id = fields[0].GetUInt32();
 
                     uint32 gameobject_entry = fields[1].GetUInt32();
-                    auto gameobject_info = sMySQLStore.GetGameObjectInfo(gameobject_entry);
+                    auto gameobject_info = sMySQLStore.GetGameObjectProperties(gameobject_entry);
                     if (gameobject_info == nullptr)
                     {
-                        Log.Error("Map::LoadSpawns", "Gameobject spawn ID: %u has invalid entry: %u which is not in gameobject_names table! Skipped loading.", go_spawn->id, gameobject_entry);
+                        Log.Error("Map::LoadSpawns", "Gameobject spawn ID: %u has invalid entry: %u which is not in gameobject_properties table! Skipped loading.", go_spawn->id, gameobject_entry);
                         delete go_spawn;
                         continue;
                     }

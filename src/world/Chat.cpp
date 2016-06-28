@@ -687,7 +687,7 @@ void CommandTableStorage::Init()
         { "player_xp_for_level",'z', &ChatHandler::HandleReloadPlayerXpForLevelCommand,     "Reload player_xp_for_level table",             nullptr, 0, 0, 0 },
         { "points_of_interest", 'z', &ChatHandler::HandleReloadPointsOfInterestCommand,     "Reload points_of_interest table",              nullptr, 0, 0, 0 },
         { "quests",             'z', &ChatHandler::HandleReloadQuestsCommand,               "Reload quests table",                          nullptr, 0, 0, 0 },
-        { "teleport_coords",    'z', &ChatHandler::HandleReloadTeleportCoordsCommand,       "Reload teleport_coords table",                 nullptr, 0, 0, 0 },
+        { "spell_teleport_coords", 'z', &ChatHandler::HandleReloadTeleportCoordsCommand,       "Reload teleport_coords table",                 nullptr, 0, 0, 0 },
         { "worldbroadcast",     'z', &ChatHandler::HandleReloadWorldbroadcastCommand,       "Reload worldbroadcast table",                  nullptr, 0, 0, 0 },
         { "worldmap_info",      'z', &ChatHandler::HandleReloadWorldmapInfoCommand,         "Reload worldmap_info table",                   nullptr, 0, 0, 0 },
         { "worldstring_tables", 'z', &ChatHandler::HandleReloadWorldstringTablesCommand,    "Reload worldstring_tables table",              nullptr, 0, 0, 0 },
@@ -707,6 +707,7 @@ void CommandTableStorage::Init()
         { "cancelshutdown",     'z', &ChatHandler::HandleServerCancelShutdownCommand,   "Cancels a Server Restart/Shutdown.",               nullptr, 0, 0, 0 },
         { "restart",            'z', &ChatHandler::HandleServerRestartCommand,          "Initiates server restart in <x> seconds.",         nullptr, 0, 0, 0 },
         { "reloadtable",        'm', nullptr,                                           "",                                 reloadTableCommandTable, 0, 0, 0 },
+        { "reloadscript",       'm', &ChatHandler::HandleServerReloadScriptsCommand,    "",                                                 nullptr, 0, 0, 0 },
         { nullptr,              '0', nullptr,                                           "",                                                 nullptr, 0, 0, 0 }
     };
     dupe_command_table(serverCommandTable, _serverCommandTable);
@@ -1575,7 +1576,7 @@ bool ChatHandler::CmdSetValueField(WorldSession* m_session, uint32 field, uint32
         if (cr)
         {
             if (!(field < UNIT_END && fieldmax < UNIT_END)) return false;
-            std::string creaturename = cr->GetCreatureInfo()->Name;
+            std::string creaturename = cr->GetCreatureProperties()->Name;
             if (fieldmax)
                 BlueSystemMessage(m_session, "Setting %s of %s to %d/%d.", fieldname, creaturename.c_str(), av, mv);
             else
@@ -1595,7 +1596,7 @@ bool ChatHandler::CmdSetValueField(WorldSession* m_session, uint32 field, uint32
                     break;
                 case UNIT_NPC_FLAGS:
                     {
-                        WorldDatabase.Execute("UPDATE creature_proto SET npcflags = %u WHERE entry = %u", av, cr->GetProto()->Id);
+                        WorldDatabase.Execute("UPDATE creature_properties SET npcflags = %u WHERE entry = %u", av, cr->GetCreatureProperties()->Id);
                     }
                     break;
             }
@@ -1685,7 +1686,7 @@ bool ChatHandler::CmdSetFloatField(WorldSession* m_session, uint32 field, uint32
         if (cr)
         {
             if (!(field < UNIT_END && fieldmax < UNIT_END)) return false;
-            std::string creaturename = cr->GetCreatureInfo()->Name;
+            std::string creaturename = cr->GetCreatureProperties()->Name;
             if (fieldmax)
                 BlueSystemMessage(m_session, "Setting %s of %s to %.1f/%.1f.", fieldname, creaturename.c_str(), av, mv);
             else

@@ -50,7 +50,7 @@ enum GameObject_Flags
 
 class Player;
 class GameObjectAIScript;
-class GameObjectTemplate;
+class GameObjectModel;
 
 enum GameObjectOverrides
 {
@@ -64,11 +64,11 @@ enum GameObjectOverrides
     /// Later other types might folow, or the upper bytes might get used for the AREAWIDE option in the overrides variable...
 };
 
-typedef std::unordered_map<Quest const*, uint32 > GameObjectGOMap;
-typedef std::unordered_map<Quest const*, std::map<uint32, uint32> > GameObjectItemMap;
+typedef std::unordered_map<QuestProperties const*, uint32 > GameObjectGOMap;
+typedef std::unordered_map<QuestProperties const*, std::map<uint32, uint32> > GameObjectItemMap;
 
 #pragma pack(push,1)
-struct GameObjectInfo
+struct GameObjectProperties
 {
     uint32 entry;
     uint32 type;
@@ -383,8 +383,8 @@ class SERVER_DECL GameObject : public Object
 
         GameEvent* mEvent = nullptr;
 
-        GameObjectInfo const* GetInfo() { return pInfo; }
-        void SetInfo(GameObjectInfo const* goi) { pInfo = goi; }
+        GameObjectProperties const* GetGameObjectProperties() { return gameobject_properties; }
+        void SetGameObjectProperties(GameObjectProperties const* go_prop) { gameobject_properties = go_prop; }
 
         bool CreateFromProto(uint32 entry, uint32 mapid, float x, float y, float z, float ang, float r0 = 0.0f, float r1 = 0.0f, float r2 = 0.0f, float r3 = 0.0f, uint32 overrides = 0);
 
@@ -405,15 +405,11 @@ class SERVER_DECL GameObject : public Object
         // Serialization
         void SaveToDB();
         void SaveToFile(std::stringstream & name);
-        //bool LoadFromDB(uint32 guid);
-        //void LoadFromDB(GameObjectTemplate *t);
         void DeleteFromDB();
 
-        void SetRotation(float rad);
-        uint64 GetRotation() const { return m_rotation; }
-
-        void UpdateRotation();
-        void UpdateRotationFields(float rotation2 = 0.0f, float rotation3 = 0.0f);
+        // z_rot, y_rot, x_rot - rotation angles around z, y and x axes
+        void SetRotationAngles(float z_rot, float y_rot, float x_rot);
+        int64 GetRotation() const { return m_rotation; }
 
         void SetSummoned(Unit* mob)
         {
@@ -448,7 +444,7 @@ class SERVER_DECL GameObject : public Object
         uint8 GetState() { return GetByte(GAMEOBJECT_BYTES_1, 0); }
 
         void SetType(uint8 type) { SetByte(GAMEOBJECT_BYTES_1, 1, type); }
-        uint32 GetType() { return this->GetInfo()->type; }
+        uint32 GetType() { return this->GetGameObjectProperties()->type; }
 
         void SetArtKit(uint8 artkit) { SetByte(GAMEOBJECT_BYTES_1, 2, artkit); }
         uint8 GetArtkKit() { return GetByte(GAMEOBJECT_BYTES_1, 2); }
@@ -471,6 +467,8 @@ class SERVER_DECL GameObject : public Object
 
         void SetDisplayId(uint32 id) { SetUInt32Value(GAMEOBJECT_DISPLAYID, id); }
         uint32 GetDisplayId() { return GetUInt32Value(GAMEOBJECT_DISPLAYID); }
+
+        void SetRotationQuat(float qx, float qy, float qz, float qw);
 
         void SetParentRotation(uint8 rot, float value) { SetFloatValue(GAMEOBJECT_PARENTROTATION + rot, value); }
         float GetParentRotation(uint8 rot) { return GetFloatValue(GAMEOBJECT_PARENTROTATION + rot); }
@@ -497,11 +495,13 @@ class SERVER_DECL GameObject : public Object
                 return false;
         }
 
+        GameObjectModel* m_model;
+
     protected:
 
         bool m_summonedGo;
         bool m_deleted;
-        GameObjectInfo const* pInfo;
+        GameObjectProperties const* gameobject_properties;
         GameObjectAIScript* myScript;
         uint32 _fields[GAMEOBJECT_END];
 
@@ -609,7 +609,7 @@ class GameObject_QuestGiver : public GameObject
         /// \param uint32 quest_id  -  Identifier of the Quest
         /// \param uint8 quest_relation  -  QuestRelation type
         /// \return the Quest on success NULL on failure
-        Quest const* FindQuest(uint32 quest_id, uint8 quest_relation);
+        QuestProperties const* FindQuest(uint32 quest_id, uint8 quest_relation);
 
         //////////////////////////////////////////////////////////////////////////////////////////
         /// Finds the Quest with quest_id in the GO, and returns it's QuestRelation type

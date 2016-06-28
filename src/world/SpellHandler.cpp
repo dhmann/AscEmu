@@ -45,13 +45,15 @@ void WorldSession::HandleUseItemOpcode(WorldPacket& recvPacket)
     recvPacket >> glyphIndex;
     recvPacket >> unk;
 
-    Item* tmpItem = NULL;
+    Item* tmpItem = nullptr;
     tmpItem = p_User->GetItemInterface()->GetInventoryItem(tmp1, slot);
     if (!tmpItem)
         tmpItem = p_User->GetItemInterface()->GetInventoryItem(slot);
+
     if (!tmpItem)
         return;
-    ItemPrototype const* itemProto = tmpItem->GetProto();
+
+    ItemProperties const* itemProto = tmpItem->GetItemProperties();
 
     // only some consumable items can be used in arenas
     if ((itemProto->Class == ITEM_CLASS_CONSUMABLE) &&
@@ -84,7 +86,7 @@ void WorldSession::HandleUseItemOpcode(WorldPacket& recvPacket)
     if (itemProto->QuestId)
     {
         // Item Starter
-        Quest const* qst = sMySQLStore.GetQuest(itemProto->QuestId);
+        QuestProperties const* qst = sMySQLStore.GetQuestProperties(itemProto->QuestId);
         if (!qst)
             return;
 
@@ -285,7 +287,7 @@ void WorldSession::HandleSpellClick(WorldPacket& recvPacket)
             {
                 Creature* c = static_cast< Creature* >(target_unit);
 
-                sChatHandler.BlueSystemMessage(this, "NPC Id %u (%s) has no spellclick spell associated with it.", c->GetProto()->Id, c->GetCreatureInfo()->Name.c_str());
+                sChatHandler.BlueSystemMessage(this, "NPC Id %u (%s) has no spellclick spell associated with it.", c->GetCreatureProperties()->Id, c->GetCreatureProperties()->Name.c_str());
                 LOG_ERROR("Spellclick packet received for creature %u but there is no spell associated with it.", creature_id);
                 return;
             }
@@ -310,7 +312,7 @@ void WorldSession::HandleSpellClick(WorldPacket& recvPacket)
         {
             Creature* c = static_cast< Creature* >(target_unit);
 
-            sChatHandler.BlueSystemMessage(this, "NPC Id %u (%s) has no spellclick spell associated with it.", c->GetProto()->Id, c->GetCreatureInfo()->Name.c_str());
+            sChatHandler.BlueSystemMessage(this, "NPC Id %u (%s) has no spellclick spell associated with it.", c->GetCreatureProperties()->Id, c->GetCreatureProperties()->Name.c_str());
             LOG_ERROR("Spellclick packet received for creature %u but there is no spell associated with it.", creature_id);
             return;
         }
@@ -378,8 +380,9 @@ void WorldSession::HandleCastSpellOpcode(WorldPacket& recvPacket)
             Item* weapon = GetPlayer()->GetItemInterface()->GetInventoryItem(EQUIPMENT_SLOT_RANGED);
             if (!weapon)
                 return;
+
             uint32 spellid;
-            switch (weapon->GetProto()->SubClass)
+            switch (weapon->GetItemProperties()->SubClass)
             {
                 case 2:			 // bows
                 case 3:			 // guns
@@ -606,9 +609,9 @@ void WorldSession::HandlePetCastSpell(WorldPacket& recvPacket)
             {
                 Creature* c = static_cast< Creature* >(nc);
 
-                if (c->GetProto()->spelldataid != 0)
+                if (c->GetCreatureProperties()->spelldataid != 0)
                 {
-                    auto creature_spell_data = sCreatureSpellDataStore.LookupEntry(c->GetProto()->spelldataid);
+                    auto creature_spell_data = sCreatureSpellDataStore.LookupEntry(c->GetCreatureProperties()->spelldataid);
 
                     if (creature_spell_data != nullptr)
                     {
@@ -623,9 +626,9 @@ void WorldSession::HandlePetCastSpell(WorldPacket& recvPacket)
                     }
                 }
 
-                for (uint8 i = 0; i < 4; i++)
+                for (uint8 i = 0; i < 4; ++i)
                 {
-                    if (c->GetProto()->AISpells[i] == spellid)
+                    if (c->GetCreatureProperties()->AISpells[i] == spellid)
                     {
                         check = true;
                         break;

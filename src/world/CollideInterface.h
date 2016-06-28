@@ -18,6 +18,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "MapDefines.h"
+
 #ifndef _COLLIDEINTERFACE_H
 #define _COLLIDEINTERFACE_H
 
@@ -31,35 +33,6 @@
 #else
 #define COLLISION_IMPORT
 #endif
-
-#define MMAP_MAGIC 0x4d4d4150   /// 'MMAP'
-#define MMAP_VERSION 5
-
-enum NavTerrain
-{
-    NAV_EMPTY   = 0x00,
-    NAV_GROUND  = 0x01,
-    NAV_MAGMA   = 0x02,
-    NAV_SLIME   = 0x04,
-    NAV_WATER   = 0x08,
-    NAV_UNUSED1 = 0x10,
-    NAV_UNUSED2 = 0x20,
-    NAV_UNUSED3 = 0x40,
-    NAV_UNUSED4 = 0x80
-    // we only have 8 bits
-};
-
-struct MmapTileHeader
-{
-    uint32 mmapMagic;
-    uint32 dtVersion;
-    uint32 mmapVersion;
-    uint32 size;
-    bool usesLiquids : 1;
-
-    MmapTileHeader() : mmapMagic(MMAP_MAGIC), dtVersion(DT_NAVMESH_VERSION),
-        mmapVersion(MMAP_VERSION), size(0), usesLiquids(true) {}
-};
 
 class NavMeshData;
 class NavMeshTile
@@ -110,21 +83,6 @@ class CCollideInterface
 
         NavMeshData* GetNavMesh(uint32 mapId);
         void LoadNavMeshTile(uint32 mapId, uint32 tileX, uint32 tileY);
-
-#ifdef COLLISION_DEBUG
-        bool CheckLOS(uint32 mapId, float x1, float y1, float z1, float x2, float y2, float z2);
-        bool GetFirstPoint(uint32 mapId, float x1, float y1, float z1, float x2, float y2, float z2, float & outx, float & outy, float & outz, float distmod);
-        bool IsIndoor(uint32 mapId, float x, float y, float z);
-        bool IsOutdoor(uint32 mapId, float x, float y, float z);
-
-        float GetHeight(uint32 mapId, float x, float y, float z);
-        bool CheckLOS(uint32 mapId, LocationVector & pos1, LocationVector & pos2);
-        bool GetFirstPoint(uint32 mapId, LocationVector & pos1, LocationVector & pos2, LocationVector & outvec, float distmod);
-        bool IsIndoor(uint32 mapId, LocationVector & pos);
-        bool IsOutdoor(uint32 mapId, LocationVector & pos);
-        float GetHeight(uint32 mapId, LocationVector & pos);
-
-#else
 
         inline bool CheckLOS(uint32 mapId, float x1, float y1, float z1, float x2, float y2, float z2)
         {
@@ -205,9 +163,6 @@ class CCollideInterface
         {
             return GetHeight(mapId, pos.x, pos.y, pos.z);
         }
-
-#endif
-
 };
 
 SERVER_DECL extern CCollideInterface CollideInterface;

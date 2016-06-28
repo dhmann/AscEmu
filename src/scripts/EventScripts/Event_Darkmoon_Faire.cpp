@@ -22,21 +22,21 @@
 
 //////////////////////////////////////////////////////////////////////////////////////////
 ///\details <b>Darkmoon Faire (Elwynn Forest)</b>\n
-// event_names entry: 4 \n
-// event_names holiday: 374 \n
+// event_properties entry: 4 \n
+// event_properties holiday: 374 \n
 ///\todo Check all Darkmoon Faire events
 
 
 //////////////////////////////////////////////////////////////////////////////////////////
 ///\details <b>Darkmoon Faire (Mulgore)</b>\n
-// event_names entry: 5 \n
-// event_names holiday: 375 \n
+// event_properties entry: 5 \n
+// event_properties holiday: 375 \n
 
 
 //////////////////////////////////////////////////////////////////////////////////////////
 ///\details <b>Darkmoon Faire (Terokkar Forest)</b>\n
-// event_names entry: 3 \n
-// event_names holiday: 376 \n
+// event_properties entry: 3 \n
+// event_properties holiday: 376 \n
 
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -681,7 +681,7 @@ class Sayge_Gossip : public GossipScript
                     // Cast the fortune into the player's inventory - Not working?
                     pCreature->CastSpell(plr, 23765, true);
                     // TEMP fix for spell not adding item to  player's inventory.
-                    auto proto = sMySQLStore.GetItemProto(19422);
+                    auto proto = sMySQLStore.GetItemProperties(19422);
                     if (proto == nullptr)
                         return;
 

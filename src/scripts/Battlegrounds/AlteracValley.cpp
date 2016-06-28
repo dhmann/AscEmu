@@ -1011,14 +1011,18 @@ AlteracValley::AVNode::AVNode(AlteracValley* parent, AVNodeTemplate* tmpl, uint3
     {
         // then we are probably a tower.
         const AVSpawnLocation* spi = g_initalGuardLocations[nodeid];
-        CreatureInfo const* ci = sMySQLStore.GetCreatureInfo(m_template->m_initialSpawnId);
-        CreatureProto const* cp = sMySQLStore.GetCreatureProto(m_template->m_initialSpawnId);
+        CreatureProperties const* cp = sMySQLStore.GetCreatureProperties(m_template->m_initialSpawnId);
+        if (cp == nullptr)
+        {
+            Log.Debug("AlteracValley", "Invalid creature entry %u!", m_template->m_initialSpawnId);
+            return;
+        }
         Creature* sp;
-        Log.Debug("AlteracValley", "spawning guards at bunker %s of %s (%u)", m_template->m_name, ci->Name.c_str(), ci->Id);
+        Log.Debug("AlteracValley", "spawning guards at bunker %s of %s (%u)", m_template->m_name, cp->Name.c_str(), cp->Id);
 
         while (spi->x != 0.0f)
         {
-            sp = m_bg->GetMapMgr()->CreateCreature(ci->Id);
+            sp = m_bg->GetMapMgr()->CreateCreature(cp->Id);
             sp->Load(cp, spi->x, spi->y, spi->z, spi->o);
             sp->PushToWorld(m_bg->GetMapMgr());
             ++spi;
@@ -1140,11 +1144,11 @@ void AlteracValley::AVNode::Spawn()
             // change entry, but to do this change guid
             if (m_flag->GetEntry() != g->id[m_state] || !m_flag->IsInWorld())
             {
-                auto gameobject_info = sMySQLStore.GetGameObjectInfo(g->id[m_state]);
+                auto gameobject_info = sMySQLStore.GetGameObjectProperties(g->id[m_state]);
                 m_flag->RemoveFromWorld(false);
                 m_flag->SetEntry(g->id[m_state]);
                 m_flag->SetNewGuid(m_bg->GetMapMgr()->GenerateGameobjectGuid());
-                m_flag->SetInfo(gameobject_info);
+                m_flag->SetGameObjectProperties(gameobject_info);
                 m_flag->SetDisplayId(gameobject_info->display_id);
                 m_flag->SetType(static_cast<uint8>(gameobject_info->type));
                 m_flag->SetFaction(g_gameObjectFactions[m_state]);
@@ -1186,11 +1190,11 @@ void AlteracValley::AVNode::Spawn()
             // change entry, but to do this change guid
             if (m_aura->GetEntry() != g->id[m_state] || !m_aura->IsInWorld())
             {
-                auto gameobject_info = sMySQLStore.GetGameObjectInfo(g->id[m_state]);
+                auto gameobject_info = sMySQLStore.GetGameObjectProperties(g->id[m_state]);
                 m_aura->RemoveFromWorld(false);
                 m_aura->SetEntry(g->id[m_state]);
                 m_aura->SetNewGuid(m_bg->GetMapMgr()->GenerateGameobjectGuid());
-                m_aura->SetInfo(gameobject_info);
+                m_aura->SetGameObjectProperties(gameobject_info);
                 m_aura->SetDisplayId(gameobject_info->display_id);
                 m_aura->SetType(static_cast<uint8>(gameobject_info->type));
                 m_aura->SetFaction(g_gameObjectFactions[m_state]);
@@ -1237,11 +1241,11 @@ void AlteracValley::AVNode::Spawn()
             // change entry, but to do this change guid
             if (m_glow->GetEntry() != g->id[m_state] || !m_glow->IsInWorld())
             {
-                auto gameobject_info = sMySQLStore.GetGameObjectInfo(g->id[m_state]);
+                auto gameobject_info = sMySQLStore.GetGameObjectProperties(g->id[m_state]);
                 m_glow->RemoveFromWorld(false);
                 m_glow->SetEntry(g->id[m_state]);
                 m_glow->SetNewGuid(m_bg->GetMapMgr()->GenerateGameobjectGuid());
-                m_glow->SetInfo(gameobject_info);
+                m_glow->SetGameObjectProperties(gameobject_info);
                 m_glow->SetDisplayId(gameobject_info->display_id);
                 m_glow->SetType(static_cast<uint8>(gameobject_info->type));
                 m_glow->SetFaction(g_gameObjectFactions[m_state]);
@@ -1835,8 +1839,8 @@ void AlteracValley::HookGenerateLoot(Player* plr, Object* pCorpse)
             if (Rand(loot_ptr->Chance * sWorld.getRate(RATE_DROP0)))
             {
                 __LootItem li;
-                ItemPrototype const* pProto = sMySQLStore.GetItemProto(loot_ptr->ItemId);
-                if (pProto != NULL)
+                ItemProperties const* pProto = sMySQLStore.GetItemProperties(loot_ptr->ItemId);
+                if (pProto != nullptr)
                 {
                     li.ffa_loot = 0;
                     li.item.displayid = pProto->DisplayInfoID;

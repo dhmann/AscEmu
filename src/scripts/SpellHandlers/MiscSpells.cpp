@@ -84,7 +84,7 @@ bool Cannibalize(uint32 i, Spell* s)
         {
             if (static_cast< Creature* >((*itr))->getDeathState() == CORPSE)
             {
-                CreatureInfo const* cn = static_cast< Creature* >((*itr))->GetCreatureInfo();
+                CreatureProperties const* cn = static_cast< Creature* >((*itr))->GetCreatureProperties();
                 if (cn->Type == UNIT_TYPE_HUMANOID || cn->Type == UNIT_TYPE_UNDEAD)
                 {
                     if (s->p_caster->GetDistance2dSq((*itr)) < rad)
@@ -197,7 +197,7 @@ bool NorthRendInscriptionResearch(uint32 i, Spell* s)
                 SpellEntry* se1 = dbcSpell.LookupEntryForced(skill_line_ability->spell);
                 if (se1 && se1->Effect[0] == SPELL_EFFECT_CREATE_ITEM)
                 {
-                    ItemPrototype const* itm = sMySQLStore.GetItemProto(se1->EffectItemType[0]);
+                    ItemProperties const* itm = sMySQLStore.GetItemProperties(se1->EffectItemType[0]);
                     if (itm && (itm->Spells[0].Id != 0))
                     {
                         SpellEntry* se2 = dbcSpell.LookupEntryForced(itm->Spells[0].Id);

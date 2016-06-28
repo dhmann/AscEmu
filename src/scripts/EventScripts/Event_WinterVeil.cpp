@@ -20,8 +20,8 @@
 
 //////////////////////////////////////////////////////////////////////////////////////////
 ///\details <b>Winter Veil</b>\n
-/// event_names entry: 2 \n
-/// event_names holiday: 141 \n
+/// event_properties entry: 2 \n
+/// event_properties holiday: 141 \n
 ///\todo Check Winter Veil \n
 
 class PX238WinterWondervolt : public GameObjectAIScript
@@ -61,7 +61,7 @@ void WinterReveler(Player* pPlayer, Unit* pUnit)
         {
             case 0:
             {
-                ItemPrototype const* proto = sMySQLStore.GetItemProto(21212);
+                ItemProperties const* proto = sMySQLStore.GetItemProperties(21212);
                 if (!proto)
                     return;
 
@@ -71,7 +71,7 @@ void WinterReveler(Player* pPlayer, Unit* pUnit)
             break;
             case 1:
             {
-                ItemPrototype const* proto = sMySQLStore.GetItemProto(21519);
+                ItemProperties const* proto = sMySQLStore.GetItemProperties(21519);
                 if (!proto)
                     return;
 
@@ -81,7 +81,7 @@ void WinterReveler(Player* pPlayer, Unit* pUnit)
             break;
             case 2:
             {
-                ItemPrototype const* proto = sMySQLStore.GetItemProto(34191);
+                ItemProperties const* proto = sMySQLStore.GetItemProperties(34191);
                 if (!proto)
                     return;
 
@@ -133,8 +133,8 @@ void WinterVeilEmote(Player* pPlayer, uint32 Emote, Unit* pUnit)
 
 //////////////////////////////////////////////////////////////////////////////////////////
 ///\details <b>Winter Veil: Gifts</b>\n
-/// event_names entry: 52 \n
-/// event_names holiday: NA \n
+/// event_properties entry: 52 \n
+/// event_properties holiday: NA \n
 ///\todo Check if gifts need a extra script \n
 
 void SetupWinterVeil(ScriptMgr* mgr)

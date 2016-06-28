@@ -51,17 +51,16 @@ bool FillTransporterPathVector(uint32 PathID, TransportPath & Path)
 
 Transporter* ObjectMgr::LoadTransportInInstance(MapMgr *instance, uint32 goEntry, uint32 period)
 {
-    auto gameobject_info = sMySQLStore.GetGameObjectInfo(goEntry);
-
-    if (!gameobject_info)
+    auto gameobject_info = sMySQLStore.GetGameObjectProperties(goEntry);
+    if (gameobject_info == nullptr)
     {
-        Log.Error("Transport Handler", "Transport ID:%u, will not be loaded, gameobject_names missing", goEntry);
+        Log.Error("Transport Handler", "Transport ID:%u, will not be loaded, gameobject_properties missing", goEntry);
         return NULL;
     }
 
     if (gameobject_info->type != GAMEOBJECT_TYPE_MO_TRANSPORT)
     {
-        Log.Error("Transporter Handler", "Transport ID:%u, Name: %s, will not be loaded, gameobject_names type wrong", goEntry, gameobject_info->name.c_str());
+        Log.Error("Transporter Handler", "Transport ID:%u, Name: %s, will not be loaded, gameobject_properties type wrong", goEntry, gameobject_info->name.c_str());
         return NULL;
     }
 
@@ -133,17 +132,16 @@ void ObjectMgr::LoadTransports()
             std::string name = fields[1].GetString();
             uint32 period = fields[2].GetUInt32();
 
-            auto gameobject_info = sMySQLStore.GetGameObjectInfo(entry);
-
-            if (!gameobject_info)
+            auto gameobject_info = sMySQLStore.GetGameObjectProperties(entry);
+            if (gameobject_info == nullptr)
             {
-                Log.Error("Transporter Handler", "Transport ID:%u, Name: %s, will not be loaded, gameobject_names missing", entry, name.c_str());
+                Log.Error("Transporter Handler", "Transport ID:%u, Name: %s, will not be loaded, gameobject_properties missing", entry, name.c_str());
                 continue;
             }
 
             if (gameobject_info->type != GAMEOBJECT_TYPE_MO_TRANSPORT)
             {
-                Log.Error("Transporter Handler", "Transport ID:%u, Name: %s, will not be loaded, gameobject_names type wrong", entry, name.c_str());
+                Log.Error("Transporter Handler", "Transport ID:%u, Name: %s, will not be loaded, gameobject_properties type wrong", entry, name.c_str());
                 continue;
             }
 
@@ -280,7 +278,7 @@ void Transporter::OnPushToWorld()
 
 bool Transporter::Create(uint32 entry, int32 Time)
 {
-    auto gameobject_info = sMySQLStore.GetGameObjectInfo(entry);
+    auto gameobject_info = sMySQLStore.GetGameObjectProperties(entry);
     if (gameobject_info == nullptr)
     {
         Log.Error("Transporter::Create", "Failed to create Transporter with go entry %u. Invalid gameobject!", entry);
@@ -591,7 +589,7 @@ bool Transporter::AddPassenger(Player* passenger)
     ARCEMU_ASSERT(passenger != nullptr);
 
     m_passengers.insert(passenger->GetLowGUID());
-    Log.Debug("Transporter", "Player %s boarded transport %u.", passenger->GetName(), this->GetInfo()->entry);
+    Log.Debug("Transporter", "Player %s boarded transport %u.", passenger->GetName(), this->GetGameObjectProperties()->entry);
 
     if (!passenger->HasUnitMovementFlag(MOVEFLAG_TRANSPORT))
     {
@@ -606,7 +604,7 @@ bool Transporter::RemovePassenger(Player* passenger)
     ARCEMU_ASSERT(passenger != nullptr);
 
     m_passengers.erase(passenger->GetLowGUID());
-    Log.Debug("Transporter", "Player %s removed from transport %u.", passenger->GetName(), this->GetInfo()->entry);
+    Log.Debug("Transporter", "Player %s removed from transport %u.", passenger->GetName(), this->GetGameObjectProperties()->entry);
 
     if (passenger->HasUnitMovementFlag(MOVEFLAG_TRANSPORT))
     {
@@ -659,7 +657,7 @@ void Transporter::Update()
         }
         if (mCurrentWaypoint->second.delayed)
         {
-            switch (GetInfo()->display_id)
+            switch (GetGameObjectProperties()->display_id)
             {
             case 3015:
             case 7087:
@@ -678,7 +676,7 @@ void Transporter::Update()
             }
             break;
             }
-            TransportGossip(GetInfo()->display_id);
+            TransportGossip(GetGameObjectProperties()->display_id);
         }
     }
 }
@@ -725,9 +723,8 @@ uint32 Transporter::AddNPCPassenger(uint32 tguid, uint32 entry, float x, float y
 {
     MapMgr* map = GetMapMgr();
 
-    CreatureInfo const* inf = sMySQLStore.GetCreatureInfo(entry);
-    CreatureProto const* proto = sMySQLStore.GetCreatureProto(entry);
-    if (inf == nullptr || proto == nullptr || map == nullptr)
+    CreatureProperties const* creature_properties = sMySQLStore.GetCreatureProperties(entry);
+    if (creature_properties == nullptr || map == nullptr)
         return 0;
 
     float transporter_x = obj_movement_info.transporter_info.position.x + x;
@@ -736,7 +733,7 @@ uint32 Transporter::AddNPCPassenger(uint32 tguid, uint32 entry, float x, float y
 
     Creature* pCreature = map->CreateCreature(entry);
     pCreature->Create(map->GetMapId(), transporter_x, transporter_y, transporter_z, (std::atan2(transporter_x, transporter_y) + float(M_PI)) + o);
-    pCreature->Load(proto, transporter_x, transporter_y, transporter_z, (std::atan2(transporter_x, transporter_y) + float(M_PI)) + o);
+    pCreature->Load(creature_properties, transporter_x, transporter_y, transporter_z, (std::atan2(transporter_x, transporter_y) + float(M_PI)) + o);
     pCreature->AddToWorld(map);
     pCreature->SetUnitMovementFlags(MOVEFLAG_TRANSPORT);
     pCreature->obj_movement_info.transporter_info.position.x = x;
@@ -754,8 +751,8 @@ uint32 Transporter::AddNPCPassenger(uint32 tguid, uint32 entry, float x, float y
     if (anim)
         pCreature->SetUInt32Value(UNIT_NPC_EMOTESTATE, anim);
 
-    if (proto->NPCFLags)
-        pCreature->SetUInt32Value(UNIT_NPC_FLAGS, proto->NPCFLags);
+    if (creature_properties->NPCFLags)
+        pCreature->SetUInt32Value(UNIT_NPC_FLAGS, creature_properties->NPCFLags);
 
     m_creatureSetMutex.Acquire();
     m_NPCPassengerSet.insert(pCreature);
@@ -775,9 +772,8 @@ Creature* Transporter::AddNPCPassengerInInstance(uint32 entry, float x, float y,
 {
     MapMgr* map = GetMapMgr();
 
-    CreatureInfo const* inf = sMySQLStore.GetCreatureInfo(entry);
-    CreatureProto const* proto = sMySQLStore.GetCreatureProto(entry);
-    if (inf == nullptr || proto == nullptr || map == nullptr)
+    CreatureProperties const* creature_properties = sMySQLStore.GetCreatureProperties(entry);
+    if (creature_properties == nullptr || map == nullptr)
         return nullptr;
 
     float transporter_x = obj_movement_info.transporter_info.position.x + x;
@@ -786,7 +782,7 @@ Creature* Transporter::AddNPCPassengerInInstance(uint32 entry, float x, float y,
 
     Creature* pCreature = map->CreateCreature(entry);
     pCreature->Create(map->GetMapId(), transporter_x, transporter_y, transporter_z, (std::atan2(transporter_x, transporter_y) + float(M_PI)) + o);
-    pCreature->Load(proto, transporter_x, transporter_y, transporter_z, (std::atan2(transporter_x, transporter_y) + float(M_PI)) + o);
+    pCreature->Load(creature_properties, transporter_x, transporter_y, transporter_z, (std::atan2(transporter_x, transporter_y) + float(M_PI)) + o);
     pCreature->AddToWorld(map);
     pCreature->SetUnitMovementFlags(MOVEFLAG_TRANSPORT);
     pCreature->obj_movement_info.transporter_info.position.x = x;

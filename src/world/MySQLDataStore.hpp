@@ -10,11 +10,10 @@ This file is released under the MIT license. See README-MIT for more information
 
 extern SERVER_DECL std::set<std::string> CreatureSpawnsTables;
 extern SERVER_DECL std::set<std::string> GameObjectSpawnsTables;
-extern SERVER_DECL std::set<std::string> GameObjectNamesTables;
-extern SERVER_DECL std::set<std::string> CreatureNamesTables;
-extern SERVER_DECL std::set<std::string> CreatureProtoTables;
-extern SERVER_DECL std::set<std::string> ItemsTables;
-extern SERVER_DECL std::set<std::string> QuestsTables;
+extern SERVER_DECL std::set<std::string> GameObjectPropertiesTables;
+extern SERVER_DECL std::set<std::string> CreaturePropertiesTables;
+extern SERVER_DECL std::set<std::string> ItemPropertiesTables;
+extern SERVER_DECL std::set<std::string> QuestPropertiesTables;
 
 class SERVER_DECL MySQLDataStore : public Singleton < MySQLDataStore >
 {
@@ -25,11 +24,10 @@ public:
 
     //maps
     typedef std::unordered_map<uint32, ItemPage> ItemPageContainer;
-    typedef std::unordered_map<uint32, ItemPrototype> ItemPrototypeContainer;
-    typedef std::unordered_map<uint32, CreatureInfo> CreatureInfoContainer;
-    typedef std::unordered_map<uint32, CreatureProto> CreatureProtoContainer;
-    typedef std::unordered_map<uint32, GameObjectInfo> GameObjectNamesContainer;
-    typedef std::unordered_map<uint32, Quest> QuestContainer;
+    typedef std::unordered_map<uint32, ItemProperties> ItemPropertiesContainer;
+    typedef std::unordered_map<uint32, CreatureProperties> CreaturePropertiesContainer;
+    typedef std::unordered_map<uint32, GameObjectProperties> GameObjectPropertiesContainer;
+    typedef std::unordered_map<uint32, QuestProperties> QuestPropertiesContainer;
 
     typedef std::unordered_map<uint32, DisplayBounding> DisplayBoundingBoxesContainer;
     typedef std::unordered_map<uint32, VendorRestrictionEntry> VendorRestrictionContainer;
@@ -53,19 +51,17 @@ public:
     //helper
     ItemPage const* GetItemPage(uint32 entry);
     ItemPageContainer const* GetItemPagesStore() { return &_itemPagesStore; }
-    ItemPrototype const* GetItemProto(uint32 entry);
-    ItemPrototypeContainer const* GetItemPrototypeStore() { return &_itemPrototypeStore; }
+    ItemProperties const* GetItemProperties(uint32 entry);
+    ItemPropertiesContainer const* GetItemPropertiesStore() { return &_itemPropertiesStore; }
 
-    CreatureInfo const* GetCreatureInfo(uint32 entry);
-    CreatureInfoContainer const* GetCreatureNamesStore() { return &_creatureNamesStore; }
-    CreatureProto const* GetCreatureProto(uint32 entry);
-    CreatureProtoContainer const* GetCreatureProtoStore() { return &_creatureProtoStore; }
+    CreatureProperties const* GetCreatureProperties(uint32 entry);
+    CreaturePropertiesContainer const* GetCreaturePropertiesStore() { return &_creaturePropertiesStore; }
 
-    GameObjectInfo const* GetGameObjectInfo(uint32 entry);
-    GameObjectNamesContainer const* GetGameObjectNamesStore() { return &_gameobjectNamesStore; }
+    GameObjectProperties const* GetGameObjectProperties(uint32 entry);
+    GameObjectPropertiesContainer const* GetGameObjectPropertiesStore() { return &_gameobjectPropertiesStore; }
 
-    Quest const* GetQuest(uint32 entry);
-    QuestContainer const* GetQuestStore() { return &_questStore; }
+    QuestProperties const* GetQuestProperties(uint32 entry);
+    QuestPropertiesContainer const* GetQuestPropertiesStore() { return &_questPropertiesStore; }
 
     DisplayBounding const* GetDisplayBounding(uint32 entry);
     DisplayBoundingBoxesContainer const* GetDisplayBoundingBoxesStore() { return &_displayBoundingBoxesStore; }
@@ -123,14 +119,13 @@ public:
 
     //Loads
     void LoadItemPagesTable();
-    void LoadItemsTable();
+    void LoadItemPropertiesTable();
 
-    void LoadCreatureNamesTable();
-    void LoadCreatureProtoTable();
+    void LoadCreaturePropertiesTable();
 
-    void LoadGameObjectNamesTable();
+    void LoadGameObjectPropertiesTable();
 
-    void LoadQuestsTable();
+    void LoadQuestPropertiesTable();
     void LoadGameObjectQuestItemBindingTable();
     void LoadGameObjectQuestPickupBindingTable();
 
@@ -155,11 +150,10 @@ public:
 
 
     ItemPageContainer _itemPagesStore;
-    ItemPrototypeContainer _itemPrototypeStore;
-    CreatureInfoContainer _creatureNamesStore;
-    CreatureProtoContainer _creatureProtoStore;
-    GameObjectNamesContainer _gameobjectNamesStore;
-    QuestContainer _questStore;
+    ItemPropertiesContainer _itemPropertiesStore;
+    CreaturePropertiesContainer _creaturePropertiesStore;
+    GameObjectPropertiesContainer _gameobjectPropertiesStore;
+    QuestPropertiesContainer _questPropertiesStore;
 
     DisplayBoundingBoxesContainer _displayBoundingBoxesStore;
     VendorRestrictionContainer _vendorRestrictionsStore;
