@@ -5,10 +5,12 @@ project(world CXX)
 
 include(Scripting/Bindings/CMakeLists.txt)
 include(Scripting/Commands/CMakeLists.txt)
+include(Scripting/Scripts/__unused_StormwindPrison/CMakeLists.txt)
 
 set(sources
     ${SRC_BINDINGS}
     ${SRC_SCRIPTING_COMMANDS}
+    ${SRC_SCRIPTING_SCRIPTS___UNUSED_STORMWINDPRISON}
 
    Commands/AccountCommands.cpp
    Commands/ArenaCommands.cpp
@@ -353,5 +355,5 @@ set_target_properties(${PROJECT_NAME} PROPERTIES ENABLE_EXPORTS TRUE)
 add_dependencies(${PROJECT_NAME} shared g3dlite collision Detour Recast)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/WorldConf.h.in ${CMAKE_CURRENT_SOURCE_DIR}/WorldConf.h)
 
-target_link_libraries(${PROJECT_NAME} shared g3dlite collision Detour Recast ${PCRE_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} ${AESCRIPT_LIBRARIES} shared g3dlite collision Detour Recast ${PCRE_LIBRARIES})
 install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION .)
