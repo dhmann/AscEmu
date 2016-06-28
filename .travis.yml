@@ -18,6 +18,10 @@ compiler:
 #    - master
 #    - coverity_scan
 
+branches:
+  except:
+    - feature/aescript
+
 git:
   depth: 1
 
@@ -73,7 +77,6 @@ before_script:
   - cmake --version
 
 script:
-  - if [ "${COVERITY_SCAN_BRANCH}" != 1 ]; then 
+  - if [ "${COVERITY_SCAN_BRANCH}" != 1 ]; then
     make -j 2;
     fi
-
