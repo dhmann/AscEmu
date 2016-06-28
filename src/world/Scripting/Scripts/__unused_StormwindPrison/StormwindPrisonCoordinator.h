@@ -3,14 +3,14 @@
 
 namespace AscEmu
 {
-	namespace Scripting
-	{
-		namespace Scripts
-		{
-			namespace __unused_StormwindPrison
-			{
-				void RegisterMe(AEScript::Core::AECore& core);
-			}
-		}
-	}
+    namespace Scripting
+    {
+        namespace Scripts
+        {
+            namespace __unused_StormwindPrison
+            {
+                void RegisterMe(AEScript::Core::AECore& core);
+            }
+        }
+    }
 }
