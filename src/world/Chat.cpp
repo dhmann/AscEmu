@@ -53,6 +53,8 @@ ChatCommand* CommandTableStorage::GetSubCommandTable(const char* name)
         return _NPCCommandTable;
     else if (!stricmp(name, "cheat"))
         return _CheatCommandTable;
+	if (!stricmp(name, "aescript"))
+		return _aeCommandTable;
     else if (!stricmp(name, "account"))
         return _accountCommandTable;
     else if (!stricmp(name, "quest"))
@@ -278,6 +280,7 @@ void CommandTableStorage::Dealloc()
     free(_NPCCommandTable);
     free(_NPCSetCommandTable);
     free(_CheatCommandTable);
+	free(_aeCommandTable);
     free(_accountCommandTable);
     free(_petCommandTable);
     free(_recallCommandTable);
@@ -591,6 +594,13 @@ void CommandTableStorage::Init()
     };
     dupe_command_table(CheatCommandTable, _CheatCommandTable);
 
+	static ChatCommand aeCommandTable[] =
+	{
+		{ "areadumpdebuginfo", 'd', &ChatHandler::HandleAEAreaDumpDebugInfo, "Creates an AEArea for the current map and dumps debug information for it", nullptr, 0, 0, 0 },
+		{ nullptr, '0', nullptr, "", nullptr, 0, 0, 0 }
+	};
+	dupe_command_table(aeCommandTable, _aeCommandTable);
+
     static ChatCommand accountCommandTable[] =
     {
         { "create",     'a', &ChatHandler::HandleAccountCreate,         "Creates an account with name and password",                        nullptr, 0, 0, 0 },
@@ -895,6 +905,7 @@ void CommandTableStorage::Init()
     {
         { "commands",        '0', &ChatHandler::HandleCommandsCommand,                      "Shows commands",                                                                                                                          NULL,                     0, 0, 0 },
         { "help",            '0', &ChatHandler::HandleHelpCommand,                          "Shows help for command",                                                                                                                  NULL,                     0, 0, 0 },
+		{ "aescript", '0', nullptr, "", aeCommandTable, 0, 0, 0},
         { "autosavechanges",  '1', &ChatHandler::HandleAutoSaveChangesCommand,                "Toggles activated/deactivated auto execute commands to save to the corresponding db table.",                                                                                                                  NULL,                     0, 0, 0 },
         { "event", '0', NULL, "", eventCommandTable, 0, 0, 0 },
         //debug

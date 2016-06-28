@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Bindings/AEVirtualArea.h>
+#include <Bindings/IAEArea.h>
 
 namespace AscEmu
 {
@@ -8,13 +8,12 @@ namespace AscEmu
     {
         namespace Bindings
         {
-            class AEArea : public AEScript::Bindings::AEVirtualArea
+            class AEArea : public AEScript::Bindings::IAEArea
             {
-                explicit AEArea(MapMgr* m_map_mgr);
-
                 MapMgr* m_mapMgr;
 
             public:
+				explicit AEArea(MapMgr* m_map_mgr);
                 std::string GetName() const override;
                 uint32_t GetId() const override;
             };

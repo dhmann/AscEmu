@@ -171,6 +171,7 @@ class SERVER_DECL CommandTableStorage : public Singleton<CommandTableStorage>
     ChatCommand* _NPCSetCommandTable;
     ChatCommand* _NPCCommandTable;
     ChatCommand* _CheatCommandTable;
+	ChatCommand* _aeCommandTable;
     ChatCommand* _accountCommandTable;
     ChatCommand* _petCommandTable;
     ChatCommand* _recallCommandTable;
@@ -251,6 +252,9 @@ class SERVER_DECL ChatHandler : public Singleton<ChatHandler>
         std::string MyConvertFloatToString(const float arg);
         // For skill related GM commands
         SkillNameMgr* SkillNameManager;
+
+		// AECommands
+		bool HandleAEAreaDumpDebugInfo(const char* args, WorldSession* session);
 
         // AccountCommands
         bool HandleAccountCreate(const char* args, WorldSession* m_session);

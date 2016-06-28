@@ -3,8 +3,12 @@
 # set up our project name
 project(world CXX)
 
+include(Scripting/Bindings/CMakeLists.txt)
+include(Scripting/Commands/CMakeLists.txt)
+
 set(sources
-    Scripting/Bindings/AEArea.cpp
+    ${SRC_BINDINGS}
+    ${SRC_SCRIPTING_COMMANDS}
 
    Commands/AccountCommands.cpp
    Commands/ArenaCommands.cpp
@@ -25,84 +29,84 @@ set(sources
    DBC/DBCLoader.cpp
    DBC/DBCRecord.cpp
    DBC/DBCSQL.cpp
-   AchievementMgr.cpp 
-   CollideInterface.cpp 
-	DayWatcherThread.cpp 
-	CommonScheduleThread.cpp 
-	ArenaTeam.cpp 
-	DatabaseCleaner.cpp 
-	AddonMgr.cpp 
-	AIInterface.cpp 
+   AchievementMgr.cpp
+   CollideInterface.cpp
+	DayWatcherThread.cpp
+	CommonScheduleThread.cpp
+	ArenaTeam.cpp
+	DatabaseCleaner.cpp
+	AddonMgr.cpp
+	AIInterface.cpp
 	AIEvents.cpp
-	AreaTrigger.cpp 
-	Arenas.cpp 
-	AuctionHouse.cpp 
-	AuctionMgr.cpp 
+	AreaTrigger.cpp
+	Arenas.cpp
+	AuctionHouse.cpp
+	AuctionMgr.cpp
 	Battleground.cpp
-	BattlegroundCommands.cpp 
-	BattlegroundHandler.cpp 
-	BattlegroundMgr.cpp 
+	BattlegroundCommands.cpp
+	BattlegroundHandler.cpp
+	BattlegroundMgr.cpp
     CalendarHandler.cpp
     CalendarMgr.cpp
-	Channel.cpp 
-	ChannelHandler.cpp 
-	CharacterHandler.cpp 
-	Chat.cpp 
+	Channel.cpp
+	ChannelHandler.cpp
+	CharacterHandler.cpp
+	Chat.cpp
 	ChatHandler.cpp
     CObjectFactory.cpp
-	CombatHandler.cpp 
-	Container.cpp 
-	Corpse.cpp 
-	Creature.cpp 
+	CombatHandler.cpp
+	Container.cpp
+	Corpse.cpp
+	Creature.cpp
 	Entities/Summons/Summon.cpp
 	Entities/Summons/CompanionSummon.cpp
 	Entities/Summons/GuardianSummon.cpp
 	Entities/Summons/PossessedSummon.cpp
 	Entities/Summons/TotemSummon.cpp
 	Entities/Summons/WildSummon.cpp
-	debugcmds.cpp 
-	DuelHandler.cpp 
-	DynamicObject.cpp 
+	debugcmds.cpp
+	DuelHandler.cpp
+	DynamicObject.cpp
 	EquipmentSetMgr.cpp
-	EventableObject.cpp 
-	EventMgr.cpp 
+	EventableObject.cpp
+	EventMgr.cpp
 	Faction.cpp
     GameEvent.cpp
     GameEventMgr.cpp
-	GameObject.cpp 
-	GMTicket.cpp 
+	GameObject.cpp
+	GMTicket.cpp
 	GMTicketCommands.cpp
 	CRitual.cpp
 	Gossip.cpp
-	Group.cpp 
-	GroupHandler.cpp 
-	Guild.cpp 
-	GuildHandler.cpp 
-	HonorHandler.cpp 
-	InstanceCommands.cpp 
-	Item.cpp 
-	ItemHandler.cpp 
-	ItemInterface.cpp 
-	Level0.cpp 
-	Level1.cpp 
-	Level2.cpp 
-	Level3.cpp 
+	Group.cpp
+	GroupHandler.cpp
+	Guild.cpp
+	GuildHandler.cpp
+	HonorHandler.cpp
+	InstanceCommands.cpp
+	Item.cpp
+	ItemHandler.cpp
+	ItemInterface.cpp
+	Level0.cpp
+	Level1.cpp
+	Level2.cpp
+	Level3.cpp
     LfgGroupData.cpp
     LfgPlayerData.cpp
-	LfgHandler.cpp 
-	LfgMgr.cpp 
-	LootMgr.cpp 
-	LocalizationMgr.cpp 
-	LogonCommClient.cpp 
-	LogonCommHandler.cpp 
+	LfgHandler.cpp
+	LfgMgr.cpp
+	LootMgr.cpp
+	LocalizationMgr.cpp
+	LogonCommClient.cpp
+	LogonCommHandler.cpp
 	MailHandler.cpp
     MailMgr.cpp
    Main.cpp
     MapManagement/AreaManagement/AreaStorage.cpp
-	MapCell.cpp 
-	Map.cpp 
-	MapScriptInterface.cpp 
-	MapMgr.cpp 
+	MapCell.cpp
+	Map.cpp
+	MapScriptInterface.cpp
+	MapMgr.cpp
 	MiscHandler.cpp
    Movement/MovementCommon.cpp
    Movement/Spline/MovementSpline.cpp
@@ -111,59 +115,59 @@ set(sources
    MySQLDataStore.cpp
    Packets/Movement/CreatureMovement.cpp
    Packets/ManagedPacket.cpp
-	MovementHandler.cpp 
-	NPCHandler.cpp 
-	Object.cpp 
-	ObjectMgr.cpp 
-	Opcodes.cpp 
-	Pet.cpp 
-	PetHandler.cpp 
+	MovementHandler.cpp
+	NPCHandler.cpp
+	Object.cpp
+	ObjectMgr.cpp
+	Opcodes.cpp
+	Pet.cpp
+	PetHandler.cpp
 	Player.cpp
 	PlayerCache.cpp
 	PlayerPacketWrapper.cpp
-	QueryHandler.cpp 
-	Quest.cpp 
-	QuestHandler.cpp 
+	QueryHandler.cpp
+	Quest.cpp
+	QuestHandler.cpp
     QuestLogEntry.cpp
-	QuestMgr.cpp 
-	QuestCommands.cpp 
-	RaidHandler.cpp 
-	RecallCommands.cpp 
-	ReputationHandler.cpp 
-	ScriptMgr.cpp 
-	SocialHandler.cpp 
+	QuestMgr.cpp
+	QuestCommands.cpp
+	RaidHandler.cpp
+	RecallCommands.cpp
+	ReputationHandler.cpp
+	ScriptMgr.cpp
+	SocialHandler.cpp
 	SpeedDetector.cpp
    SpellManagement/SpellCustomizations.cpp
-	SpellAuras.cpp 
-	SpellTarget.cpp 
-	Spell.cpp 
+	SpellAuras.cpp
+	SpellTarget.cpp
+	Spell.cpp
 	StdAfx.cpp
 	SummonHandler.cpp
-	SpellEffects.cpp 
-	SpellHandler.cpp 
-	HackFixes.cpp 
-	Stats.cpp 
-	TaxiHandler.cpp 
-	TaxiMgr.cpp 
-	TerrainMgr.cpp 
-	TradeHandler.cpp 
-	TransporterHandler.cpp 
-	Unit.cpp 
-	Vehicle.cpp 
+	SpellEffects.cpp
+	SpellHandler.cpp
+	HackFixes.cpp
+	Stats.cpp
+	TaxiHandler.cpp
+	TaxiMgr.cpp
+	TerrainMgr.cpp
+	TradeHandler.cpp
+	TransporterHandler.cpp
+	Unit.cpp
+	Vehicle.cpp
 	VehicleHandler.cpp
-	WeatherMgr.cpp 
-	World.cpp 
-	WorldCreator.cpp 
-	WorldSession.cpp 
-	WorldSocket.cpp 
+	WeatherMgr.cpp
+	World.cpp
+	WorldCreator.cpp
+	WorldSession.cpp
+	WorldSocket.cpp
 	WorldStatesHandler.cpp
-	WorldRunnable.cpp 
-	WordFilter.cpp 
-	Master.cpp 
-	CConsole.cpp 
-	ConsoleCommands.cpp 
-	ConsoleListener.cpp 
-	WUtil.cpp 
+	WorldRunnable.cpp
+	WordFilter.cpp
+	Master.cpp
+	CConsole.cpp
+	ConsoleCommands.cpp
+	ConsoleListener.cpp
+	WUtil.cpp
 	SpellProc.cpp
    SpellProc_ClassScripts.cpp
 	SpellProc_Items.cpp
@@ -178,7 +182,7 @@ endif()
 
 set(headers
     Scripting/Bindings/AEArea.h
-    
+
 	AchievementMgr.h
 	AddonMgr.h
 	AIInterface.h
