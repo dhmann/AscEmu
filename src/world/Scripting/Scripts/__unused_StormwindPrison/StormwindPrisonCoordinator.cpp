@@ -9,13 +9,13 @@ namespace AscEmu
         {
             namespace __unused_StormwindPrison
             {
-                void RegisterMe(AEScript::Core::AECore& core)
+                using AEScript::Core::AECore;
+                using AEScript::Scripts::ScriptFactory;
+                using std::move;
+                using std::make_unique;
+                void RegisterMe()
                 {
-                    AEScript::Scripts::ScriptCollection collection("StormwindPrison");
-
-                    collection.RegisterAreaScript(35, StormwindPrison::CreateAreaScript);
-
-                    core.RegisterScriptCollection(collection);
+                    AECore::RegisterAreaScript(35, move(make_unique<ScriptFactory<StormwindPrison>>()));
                 }
             }
         }

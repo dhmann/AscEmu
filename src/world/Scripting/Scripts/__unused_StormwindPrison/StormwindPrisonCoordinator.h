@@ -9,7 +9,7 @@ namespace AscEmu
         {
             namespace __unused_StormwindPrison
             {
-                void RegisterMe(AEScript::Core::AECore& core);
+                void RegisterMe();
             }
         }
     }

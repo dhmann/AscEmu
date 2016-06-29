@@ -8,15 +8,10 @@ namespace AscEmu
         {
             namespace __unused_StormwindPrison
             {
-                bool StormwindPrison::OnPlayerEntering(std::unique_ptr<AEScript::Bindings::IAEPlayer>& player)
+                bool StormwindPrison::OnPlayerEntering(const AEScript::Bindings::IAEPlayer& player)
                 {
-                    player->Say("Now entering Stormwind Prison");
+                    player.Say("Now entering Stormwind Prison");
                     return true;
-                }
-
-                StormwindPrison::StormwindPrison(std::unique_ptr<AEScript::Bindings::IAEArea>& vArea) : AreaScript(vArea)
-                {
-
                 }
             }
         }

@@ -9,12 +9,15 @@ namespace AscEmu
         {
             namespace __unused_StormwindPrison
             {
-                class StormwindPrison : public AEScript::Scripts::AreaScript {
+                class StormwindPrison : public AEScript::Scripts::AreaScript
+                {
                 public:
-                    MACRO_CreateAreaScript(StormwindPrison)
+                    explicit StormwindPrison(const AEScript::Core::AEObjectCollection& objects)
+                        : AreaScript(objects)
+                    {
+                    }
 
-                        bool OnPlayerEntering(std::unique_ptr<AEScript::Bindings::IAEPlayer>& player) override;
-                    explicit StormwindPrison(std::unique_ptr<AEScript::Bindings::IAEArea>& vArea);
+                    bool OnPlayerEntering(const AEScript::Bindings::IAEPlayer& player) override;
                 };
             }
         }

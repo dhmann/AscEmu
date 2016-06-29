@@ -322,6 +322,7 @@ class SERVER_DECL MapMgr : public CellHandler <MapCell>, public EventableObject,
 	protected:
 
 		InstanceScript* mInstanceScript;
+        uint64_t m_areaGuid;
 
 	private:
 

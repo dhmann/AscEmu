@@ -16,6 +16,9 @@ namespace AscEmu
                 explicit AEArea(MapMgr* m_map_mgr);
                 std::string GetName() const override;
                 uint32_t GetId() const override;
+                std::string ToString() const override;
+                void OnInitialisation() const override;
+                void OnDestruction() const override;
             };
         }
     }

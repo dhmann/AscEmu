@@ -19,6 +19,20 @@ namespace AscEmu
             {
                 return m_mapMgr->GetMapId();
             }
+
+            std::string AEArea::ToString() const
+            {
+                return GetName();
+            }
+
+            void AEArea::OnInitialisation() const
+            {
+
+            }
+
+            void AEArea::OnDestruction() const
+            {
+            }
         }
     }
 }

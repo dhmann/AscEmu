@@ -22,6 +22,7 @@
 #include "StdAfx.h"
 #include "QuestLogEntry.hpp"
 #include "Opcodes.h"
+#include <Core/AECore.h>
 
 
 UpdateMask Player::m_visibleUpdateMask;
@@ -3771,6 +3772,8 @@ void Player::AddToWorld()
         m_session->SetInstance(m_mapMgr->GetInstanceID());
 
     SendInstanceDifficulty(m_mapMgr->iInstanceMode);
+
+    // TODO: Fire PlayerMapChange event here
 }
 
 void Player::AddToWorld(MapMgr* pMapMgr)

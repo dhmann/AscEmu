@@ -28,6 +28,8 @@
 #include "CrashHandler.h"
 #include "Entities/Summons/Summon.h"
 #include "Unit.h"
+#include <Core/AECore.h>
+#include "Scripting/Bindings/AEArea.h"
 
 
 Arcemu::Utility::TLSObject<MapMgr*> t_currentMapContext;
@@ -94,10 +96,13 @@ MapMgr::MapMgr(Map* map, uint32 mapId, uint32 instanceid) : CellHandler<MapCell>
     _reusable_guids_creature.clear();
 
     mInstanceScript = NULL;
+    m_areaGuid = AEScript::Core::AECore::RegisterArea(std::make_unique<AscEmu::Scripting::Bindings::AEArea>(this));
 }
 
 MapMgr::~MapMgr()
 {
+    AEScript::Core::AECore::DeregisterArea(m_areaGuid);
+
     CollideInterface.DeactiveMap(_mapId);
     _shutdown = true;
     sEventMgr.RemoveEvents(this);

@@ -19,6 +19,8 @@
  */
 
 #include "StdAfx.h"
+#include <Core/AECore.h>
+#include <Scripting/Scripts/__unused_StormwindPrison/StormwindPrisonCoordinator.h>
 
 createFileSingleton(Master);
 std::string LogFileName;
@@ -267,6 +269,10 @@ bool Master::Run(int argc, char** argv)
     sSocketMgr.SpawnWorkerThreads();
 
     sScriptMgr.LoadScripts();
+
+    /* TODO: Load AEScript */
+    /* TODO: Actual script loader */
+    AscEmu::Scripting::Scripts::__unused_StormwindPrison::RegisterMe();
 
     if (Config.MainConfig.GetBoolDefault("Startup", "EnableSpellIDDump", false))
         sScriptMgr.DumpUnimplementedSpells();
