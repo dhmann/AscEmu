@@ -332,10 +332,11 @@ void LootMgr::PushLoot(StoreLootList* list, Loot* loot, uint32 type)
         return;
     for (uint32 x = 0; x < list->count; x++)
     {
-        if (list->items[x].item.itemproto) // this check is needed until loot DB is fixed
-        {
+        /*if (list->items[x].item.itemproto) // this check is needed until loot DB is fixed
+        {*/
             float chance = 0.0f;
-            switch (type)
+            chance = list->items[x].chance;
+            /*switch (type)
             {
                 case LOOT_NORMAL10:
                     chance = list->items[x].chance;
@@ -349,7 +350,7 @@ void LootMgr::PushLoot(StoreLootList* list, Loot* loot, uint32 type)
                 case LOOT_HEROIC25:
                     chance = list->items[x].chance4;
                     break;
-            }
+            }*/
             // drop chance cannot be larger than 100% or smaller than 0%
             if (chance <= 0.0f || chance > 100.0f)
                 continue;
@@ -399,7 +400,7 @@ void LootMgr::PushLoot(StoreLootList* list, Loot* loot, uint32 type)
                 }
                 loot->items.push_back(itm);
             }
-        }
+        //}
     }
     if (loot->items.size() > 16)
     {
@@ -407,7 +408,7 @@ void LootMgr::PushLoot(StoreLootList* list, Loot* loot, uint32 type)
         std::vector<__LootItem>::iterator itr;
         uint32 item_quality;
         bool quest_item;
-        while (loot->items.size() > 16)
+        while (loot->items.size() > 3)
         {
             item_to_remove = loot->items.begin();
             item_quality = 0;
@@ -530,13 +531,13 @@ void LootMgr::FillCreatureLoot(Loot* loot, uint32 loot_id, uint32 type)
 
 void LootMgr::FillGOLoot(Loot* loot, uint32 loot_id, uint32 type)
 {
-    loot->items.clear();
-    loot->gold = 0;
+    //loot->items.clear();
+    //loot->gold = 0;
     LootStore::iterator tab = GOLoot.find(loot_id);
     if (GOLoot.end() == tab)
         return;
     else
-        PushLoot(&tab->second, loot, type);
+        PushLoot(&tab->second, loot, 0);
 }
 
 void LootMgr::FillFishingLoot(Loot* loot, uint32 loot_id)
@@ -573,14 +574,14 @@ void LootMgr::FillPickpocketingLoot(Loot* loot, uint32 loot_id)
 }
 
 bool LootMgr::CanGODrop(uint32 LootId, uint32 itemid)
-{
+{/*
     LootStore::iterator tab = GOLoot.find(LootId);
     if (GOLoot.end() == tab)
         return false;
     StoreLootList* list = &(tab->second);
     for (uint32 x = 0; x < list->count; x++)
         if (list->items[x].item.itemproto->ItemId == itemid)
-            return true;
+            return true;*/
     return false;
 }
 

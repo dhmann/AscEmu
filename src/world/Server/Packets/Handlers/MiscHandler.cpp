@@ -429,6 +429,7 @@ void WorldSession::HandleLootMoneyOpcode(WorldPacket& recv_data)
     }
 }
 
+//Used to send the Player the lootwindow when looting a NPC
 void WorldSession::HandleLootOpcode(WorldPacket& recv_data)
 {
     CHECK_INWORLD_RETURN
@@ -1599,7 +1600,7 @@ void WorldSession::HandleBarberShopResult(WorldPacket& recv_data)
 #endif
 
 void WorldSession::HandleGameObjectUse(WorldPacket& recv_data)
-{
+{/*
     CHECK_INWORLD_RETURN
 
     uint64 guid;
@@ -1904,7 +1905,7 @@ void WorldSession::HandleGameObjectUse(WorldPacket& recv_data)
                     SpellCastTargets targets2(plr->GetGUID());
                     spell->prepare(&targets2);
 
-                    /* expire the gameobject */
+                    /* expire the gameobject *//*
                     ritual_obj->ExpireAndDelete();
                 }
                 else if (gameobject_info->entry == 186811 || gameobject_info->entry == 181622)
@@ -1946,7 +1947,7 @@ void WorldSession::HandleGameObjectUse(WorldPacket& recv_data)
         break;
         case GAMEOBJECT_TYPE_MEETINGSTONE:	// Meeting Stone
         {
-            /* Use selection */
+            /* Use selection *//*
             Player* pPlayer = objmgr.GetPlayer((uint32)_player->GetSelection());
             if (pPlayer == nullptr)
                 return;
@@ -1981,7 +1982,7 @@ void WorldSession::HandleGameObjectUse(WorldPacket& recv_data)
             sEventMgr.AddEvent(pGo, &GameObject::_Expire, EVENT_GAMEOBJECT_EXPIRE, 120000, 1, EVENT_FLAG_DO_NOT_EXECUTE_IN_WORLD_CONTEXT);
         }
         break;
-    }
+    }*/
 }
 
 void WorldSession::HandleTutorialFlag(WorldPacket& recv_data)
